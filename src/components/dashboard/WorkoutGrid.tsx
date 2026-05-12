@@ -11,7 +11,8 @@ import {
   TrashIcon,
   FolderPlusIcon,
   CheckCircleIcon,
-  SparklesIcon
+  SparklesIcon,
+  ArrowPathIcon
 } from '@heroicons/react/24/outline';
 import { 
   PencilIcon, 
@@ -72,7 +73,8 @@ const UI_STRINGS: any = {
     noPlans: 'Lịch tập mặc định',
     sessionPlaceholder: 'Buổi tập: Ngực, Chân...',
     setsLabel: 'hiệp',
-    repsLabel: 'lần'
+    repsLabel: 'lần',
+    processing: 'Đang xử lý...'
   },
   en: {
     addEx: 'Add Exercise',
@@ -99,7 +101,8 @@ const UI_STRINGS: any = {
     noPlans: 'Default Plan',
     sessionPlaceholder: 'Session: Chest, Legs...',
     setsLabel: 'sets',
-    repsLabel: 'reps'
+    repsLabel: 'reps',
+    processing: 'Processing...'
   }
 };
 
@@ -112,6 +115,7 @@ export default function WorkoutGrid({ settings }: { settings: { language: 'vi' |
   const [plans, setPlans] = useState<any[]>([]);
   const [currentPlanIndex, setCurrentPlanIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeDay, setActiveDay] = useState<string | null>(null);
   const [editingExercise, setEditingExercise] = useState<{ day: string, index: number, data: any } | null>(null);
   const [newExercise, setNewExercise] = useState({ name: '', weight: '', sets: '', reps: '' });
@@ -157,6 +161,7 @@ export default function WorkoutGrid({ settings }: { settings: { language: 'vi' |
   };
 
   const handleCreatePlan = async (title: string, isInitial = false) => {
+    setIsSubmitting(true);
     try {
       const res = await fetch('/api/workouts', {
         method: 'POST',
@@ -174,6 +179,8 @@ export default function WorkoutGrid({ settings }: { settings: { language: 'vi' |
       }
     } catch (err) {
       console.error(err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -199,6 +206,7 @@ export default function WorkoutGrid({ settings }: { settings: { language: 'vi' |
   };
 
   const handleDeletePlan = async (id: string) => {
+    setIsSubmitting(true);
     try {
       const res = await fetch(`/api/workouts?planId=${id}`, { method: 'DELETE' });
       if (res.ok) {
@@ -208,6 +216,8 @@ export default function WorkoutGrid({ settings }: { settings: { language: 'vi' |
       }
     } catch (err) {
       console.error(err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -225,6 +235,7 @@ export default function WorkoutGrid({ settings }: { settings: { language: 'vi' |
 
   const handleDeleteAllOthers = async () => {
     if (!currentPlan) return;
+    setIsSubmitting(true);
     try {
       const res = await fetch(`/api/workouts?planId=${currentPlan._id}&deleteAllExcept=true`, { method: 'DELETE' });
       if (res.ok) {
@@ -233,6 +244,8 @@ export default function WorkoutGrid({ settings }: { settings: { language: 'vi' |
       }
     } catch (err) {
       console.error(err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -265,6 +278,7 @@ export default function WorkoutGrid({ settings }: { settings: { language: 'vi' |
 
   const handleAddExercise = async () => {
     if (!newExercise.name || !currentPlan || !activeDay) return;
+    setIsSubmitting(true);
 
     const workout = currentPlan.days.find((w: any) => w.dayOfWeek === activeDay);
     const updatedExercises = [...(workout?.exercises || []), {
@@ -294,11 +308,14 @@ export default function WorkoutGrid({ settings }: { settings: { language: 'vi' |
       }
     } catch (err) {
       console.error(err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleUpdateExercise = async () => {
     if (!editingExercise || !currentPlan) return;
+    setIsSubmitting(true);
     const { day, index, data } = editingExercise;
 
     const workout = currentPlan.days.find((w: any) => w.dayOfWeek === day);
@@ -329,6 +346,8 @@ export default function WorkoutGrid({ settings }: { settings: { language: 'vi' |
       }
     } catch (err) {
       console.error(err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -344,6 +363,7 @@ export default function WorkoutGrid({ settings }: { settings: { language: 'vi' |
 
   const deleteExercise = async (day: string, index: number) => {
     if (!currentPlan) return;
+    setIsSubmitting(true);
 
     const workout = currentPlan.days.find((w: any) => w.dayOfWeek === day);
     const updatedExercises = workout.exercises.filter((_: any, i: number) => i !== index);
@@ -366,11 +386,14 @@ export default function WorkoutGrid({ settings }: { settings: { language: 'vi' |
       }
     } catch (err) {
       console.error(err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleRename = async () => {
     if (!newTitle || !currentPlan) return;
+    setIsSubmitting(true);
     try {
       const res = await fetch('/api/workouts', {
         method: 'POST',
@@ -384,6 +407,8 @@ export default function WorkoutGrid({ settings }: { settings: { language: 'vi' |
       }
     } catch (err) {
       console.error(err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -398,6 +423,9 @@ export default function WorkoutGrid({ settings }: { settings: { language: 'vi' |
 
   return (
     <div>
+      {/* Submitting Overlay */}
+      {isSubmitting && <LoadingSpinner fullScreen />}
+
       <ConfirmModal 
         isOpen={modalConfig.isOpen}
         title={modalConfig.title}
@@ -439,8 +467,14 @@ export default function WorkoutGrid({ settings }: { settings: { language: 'vi' |
               <input type="number" placeholder="0" className="input-field" value={newExercise.reps} onChange={e => setNewExercise({ ...newExercise, reps: e.target.value })} />
             </div>
           </div>
-          <button className="btn btn-primary" style={{ width: '100%', padding: '1rem', marginTop: '0.5rem' }} onClick={handleAddExercise}>
-            {t.add}
+          <button 
+            className="btn btn-primary" 
+            style={{ width: '100%', padding: '1rem', marginTop: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }} 
+            onClick={handleAddExercise}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? <ArrowPathIcon className="w-5 h-5 animate-spin" style={{ width: '1.25rem', height: '1.25rem' }} /> : null}
+            {isSubmitting ? t.processing : t.add}
           </button>
         </div>
       </Modal>
@@ -475,8 +509,14 @@ export default function WorkoutGrid({ settings }: { settings: { language: 'vi' |
                 <input type="number" className="input-field" value={editingExercise.data.reps} onChange={e => setEditingExercise({ ...editingExercise, data: { ...editingExercise.data, reps: e.target.value } })} />
               </div>
             </div>
-            <button className="btn btn-primary" style={{ width: '100%', padding: '1rem', marginTop: '0.5rem' }} onClick={handleUpdateExercise}>
-              {t.save}
+            <button 
+              className="btn btn-primary" 
+              style={{ width: '100%', padding: '1rem', marginTop: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }} 
+              onClick={handleUpdateExercise}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? <ArrowPathIcon className="w-5 h-5 animate-spin" style={{ width: '1.25rem', height: '1.25rem' }} /> : null}
+              {isSubmitting ? t.processing : t.save}
             </button>
           </div>
         )}
@@ -494,8 +534,10 @@ export default function WorkoutGrid({ settings }: { settings: { language: 'vi' |
                   autoFocus
                   style={{ padding: '0.4rem 0.6rem', fontSize: '0.9rem' }}
                 />
-                <button className="btn btn-primary" style={{ padding: '0.4rem' }} onClick={handleRename}><CheckIcon style={{ width: '1rem', height: '1rem' }} /></button>
-                <button className="btn" style={{ padding: '0.4rem' }} onClick={() => setIsRenaming(false)}><XMarkIcon style={{ width: '1rem', height: '1rem' }} /></button>
+                <button className="btn btn-primary" style={{ padding: '0.4rem' }} onClick={handleRename} disabled={isSubmitting}>
+                  {isSubmitting ? <ArrowPathIcon className="w-4 h-4 animate-spin" /> : <CheckIcon style={{ width: '1rem', height: '1rem' }} />}
+                </button>
+                <button className="btn" style={{ padding: '0.4rem' }} onClick={() => setIsRenaming(false)} disabled={isSubmitting}><XMarkIcon style={{ width: '1rem', height: '1rem' }} /></button>
               </div>
             ) : (
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
@@ -504,6 +546,7 @@ export default function WorkoutGrid({ settings }: { settings: { language: 'vi' |
                     className={styles.sessionInput} 
                     value={currentPlanIndex} 
                     onChange={(e) => setCurrentPlanIndex(parseInt(e.target.value))}
+                    disabled={isSubmitting}
                     style={{ 
                       fontSize: '1rem', 
                       width: '100%', 
@@ -522,6 +565,7 @@ export default function WorkoutGrid({ settings }: { settings: { language: 'vi' |
                   onClick={() => { setIsRenaming(true); setNewTitle(currentPlan?.title || ''); }}
                   style={{ background: 'rgba(37, 99, 235, 0.1)', color: 'var(--primary)', borderRadius: '8px', padding: '0.4rem' }}
                   title={t.rename}
+                  disabled={isSubmitting}
                 >
                   <PencilSquareIcon style={{ width: '1rem', height: '1rem' }} />
                 </button>
@@ -532,12 +576,12 @@ export default function WorkoutGrid({ settings }: { settings: { language: 'vi' |
             <button 
               className="btn" 
               onClick={confirmDeleteAllOtherPlans}
-              disabled={plans.length <= 1}
+              disabled={plans.length <= 1 || isSubmitting}
               style={{ 
                 background: 'rgba(139, 92, 246, 0.1)', 
                 color: '#8b5cf6', 
                 padding: '0.5rem',
-                opacity: plans.length <= 1 ? 0.3 : 1
+                opacity: plans.length <= 1 || isSubmitting ? 0.3 : 1
               }}
               title={t.cleanup}
             >
@@ -548,17 +592,18 @@ export default function WorkoutGrid({ settings }: { settings: { language: 'vi' |
               onClick={() => handleCreatePlan(`${t.noPlans} ${plans.length + 1}`)} 
               title={t.create}
               style={{ padding: '0.5rem' }}
+              disabled={isSubmitting}
             >
-              <FolderPlusIcon style={{ width: '1.25rem', height: '1.25rem' }} />
+              {isSubmitting ? <ArrowPathIcon className="w-5 h-5 animate-spin" /> : <FolderPlusIcon style={{ width: '1.25rem', height: '1.25rem' }} />}
             </button>
             <button 
               className="btn" 
               onClick={() => confirmDeletePlan(currentPlan?._id)} 
-              disabled={plans.length <= 1}
+              disabled={plans.length <= 1 || isSubmitting}
               style={{ 
-                color: plans.length <= 1 ? '#cbd5e1' : '#ef4444', 
+                color: plans.length <= 1 || isSubmitting ? '#cbd5e1' : '#ef4444', 
                 padding: '0.5rem',
-                opacity: plans.length <= 1 ? 0.5 : 1
+                opacity: plans.length <= 1 || isSubmitting ? 0.5 : 1
               }} 
               title={t.deletePlan}
             >
@@ -585,6 +630,7 @@ export default function WorkoutGrid({ settings }: { settings: { language: 'vi' |
                   placeholder={t.sessionPlaceholder}
                   defaultValue={workout?.sessionName || ''}
                   onBlur={(e) => updateSessionName(day, e.target.value)}
+                  disabled={isSubmitting}
                   style={{ fontSize: '0.85rem' }}
                 />
               </div>
@@ -606,10 +652,10 @@ export default function WorkoutGrid({ settings }: { settings: { language: 'vi' |
                           <span className={styles.weightUnit}>kg</span>
                         </div>
                         <div className={styles.actions}>
-                          <button className={styles.actionBtnEdit} style={{ width: '24px', height: '24px' }} onClick={() => setEditingExercise({ day, index: exIdx, data: { ...ex } })}>
+                          <button className={styles.actionBtnEdit} style={{ width: '24px', height: '24px' }} onClick={() => setEditingExercise({ day, index: exIdx, data: { ...ex } })} disabled={isSubmitting}>
                             <PencilIcon style={{ width: '0.85rem', height: '0.85rem' }} />
                           </button>
-                          <button className={styles.actionBtnDelete} style={{ width: '24px', height: '24px' }} onClick={() => confirmDeleteExercise(day, exIdx)}>
+                          <button className={styles.actionBtnDelete} style={{ width: '24px', height: '24px' }} onClick={() => confirmDeleteExercise(day, exIdx)} disabled={isSubmitting}>
                             <TrashIconSolid style={{ width: '0.8rem', height: '0.8rem' }} />
                           </button>
                         </div>
@@ -624,7 +670,7 @@ export default function WorkoutGrid({ settings }: { settings: { language: 'vi' |
                 )}
               </ul>
 
-              <button className={styles.addBtn} style={{ padding: '0.6rem', fontSize: '0.85rem' }} onClick={() => setActiveDay(day)}>
+              <button className={styles.addBtn} style={{ padding: '0.6rem', fontSize: '0.85rem' }} onClick={() => setActiveDay(day)} disabled={isSubmitting}>
                 <PlusIcon style={{ width: '1rem', height: '1rem' }} />
                 {t.addEx}
               </button>
