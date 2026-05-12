@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { PlusIcon, CalendarIcon, DumbbellIcon } from 'lucide-react'; // Keeping some lucide ones for variety or switching all?
-import { PencilIcon, TrashIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, CalendarIcon, BoltIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { PencilIcon, TrashIcon } from '@heroicons/react/24/solid';
 import styles from '@/app/dashboard.module.css';
 
 const DAYS_VN: { [key: string]: string } = {
@@ -56,7 +56,6 @@ export default function WorkoutGrid() {
           exercises: workout?.exercises || [] 
         })
       });
-      // Update local state
       setWorkouts(prev => {
         const existing = prev.find(w => w.dayOfWeek === day);
         if (existing) {
@@ -173,7 +172,7 @@ export default function WorkoutGrid() {
             <div className={styles.dayHeader}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3 className={styles.dayTitle}>{DAYS_VN[day]}</h3>
-                <CalendarIcon className="w-5 h-5 text-slate-400" style={{ width: '1.2rem', height: '1.2rem', color: 'var(--text-muted)' }} />
+                <CalendarIcon style={{ width: '1.2rem', height: '1.2rem', color: 'var(--text-muted)' }} />
               </div>
               <input
                 type="text"
@@ -192,6 +191,7 @@ export default function WorkoutGrid() {
                   if (isEditing) {
                     return (
                       <li key={idx} className="glass" style={{ padding: '1rem', borderRadius: '16px', marginBottom: '0.75rem', border: '1px solid var(--primary)' }}>
+                        <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--primary)', marginBottom: '0.25rem', display: 'block' }}>Tên bài tập</label>
                         <input
                           type="text"
                           className="input-field"
@@ -231,10 +231,18 @@ export default function WorkoutGrid() {
                           <span className={styles.weightUnit}>kg</span>
                         </div>
                         <div className={styles.actions}>
-                          <button className={styles.btnIcon} onClick={() => setEditingExercise({ day, index: idx, data: { ...ex } })}>
+                          <button 
+                            className={styles.actionBtnEdit} 
+                            onClick={() => setEditingExercise({ day, index: idx, data: { ...ex } })} 
+                            title="Sửa bài tập"
+                          >
                             <PencilIcon style={{ width: '1rem', height: '1rem' }} />
                           </button>
-                          <button className={styles.btnIcon} onClick={() => deleteExercise(day, idx)} style={{ color: 'var(--error)' }}>
+                          <button 
+                            className={styles.actionBtnDelete} 
+                            onClick={() => deleteExercise(day, idx)} 
+                            title="Xóa bài tập"
+                          >
                             <TrashIcon style={{ width: '1rem', height: '1rem' }} />
                           </button>
                         </div>
@@ -244,13 +252,15 @@ export default function WorkoutGrid() {
                 })
               ) : (
                 <div style={{ textAlign: 'center', padding: '1.5rem 0', opacity: 0.35 }}>
-                  <p style={{ fontSize: '0.85rem' }}>Chưa có bài tập</p>
+                  <BoltIcon style={{ width: '2rem', height: '2rem', margin: '0 auto 0.5rem auto' }} />
+                  <p style={{ fontSize: '0.85rem' }}>Chưa có lịch tập</p>
                 </div>
               )}
             </ul>
 
             {isAdding ? (
               <div className="glass" style={{ padding: '1rem', borderRadius: '20px', marginBottom: '0.75rem', border: '1px solid var(--primary-glow)' }}>
+                <h4 style={{ fontSize: '0.9rem', marginBottom: '0.75rem', fontWeight: 800, color: 'var(--primary)' }}>Thêm bài tập mới</h4>
                 <input
                   type="text"
                   placeholder="Tên bài tập..."
@@ -264,12 +274,12 @@ export default function WorkoutGrid() {
                   <input type="number" placeholder="Hiệp" className="input-field" style={{ padding: '0.6rem' }} value={newExercise.sets} onChange={e => setNewExercise({ ...newExercise, sets: e.target.value })} />
                   <input type="number" placeholder="Lần" className="input-field" style={{ padding: '0.6rem' }} value={newExercise.reps} onChange={e => setNewExercise({ ...newExercise, reps: e.target.value })} />
                 </div>
-                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.25rem' }}>
                   <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => handleAddExercise(day)}>
-                    Thêm
+                    Xác nhận
                   </button>
                   <button className="btn" onClick={() => setActiveDay(null)}>
-                    Hủy
+                    Đóng
                   </button>
                 </div>
               </div>

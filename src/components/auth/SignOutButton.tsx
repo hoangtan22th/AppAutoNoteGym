@@ -1,7 +1,7 @@
 'use client';
 
 import { signOut } from 'next-auth/react';
-import { LogOut } from 'lucide-react';
+import { ArrowLeftOnRectangleIcon } from '@heroicons/react/24/outline';
 
 export default function SignOutButton() {
   return (
@@ -10,7 +10,7 @@ export default function SignOutButton() {
       className="btn btn-secondary"
       style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
     >
-      <LogOut size={16} />
+      <ArrowLeftOnRectangleIcon className="w-4 h-4" style={{ width: '1rem', height: '1rem' }} />
       Đăng xuất
     </button>
   );

@@ -2,8 +2,9 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from './api/auth/[...nextauth]/route';
 import { redirect } from 'next/navigation';
 import WorkoutGrid from '@/components/dashboard/WorkoutGrid';
+import InstallPWA from '@/components/dashboard/InstallPWA';
 import styles from './dashboard.module.css';
-import { LogOut, Dumbbell, Zap } from 'lucide-react';
+import { BoltIcon, FireIcon } from '@heroicons/react/24/solid';
 import SignOutButton from '@/components/auth/SignOutButton';
 
 export default async function Home() {
@@ -17,7 +18,10 @@ export default async function Home() {
     <main className={`${styles.dashboard} container`}>
       <header className={styles.header}>
         <div className={styles.titleSection}>
-          <h1>TanGYM</h1>
+          <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <BoltIcon className="w-8 h-8 text-blue-600" style={{ width: '2rem', height: '2rem', color: 'var(--primary)' }} />
+            TanGYM
+          </h1>
           <p>Chào {session.user?.name}, hôm nay bạn tập gì thế?</p>
         </div>
         <SignOutButton />
@@ -40,13 +44,15 @@ export default async function Home() {
           borderRadius: '16px',
           backdropFilter: 'blur(10px)'
         }}>
-          <Zap size={24} fill="white" />
+          <FireIcon className="w-6 h-6" style={{ width: '1.5rem', height: '1.5rem' }} />
         </div>
         <div>
           <h2 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.1rem' }}>Lịch tập tuần này</h2>
           <p style={{ opacity: 0.9, fontSize: '0.9rem' }}>Theo dõi khối lượng tạ mỗi ngày.</p>
         </div>
       </div>
+
+      <InstallPWA />
 
       <WorkoutGrid />
 
