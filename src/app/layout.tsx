@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Roboto } from "next/font/google";
 import "./globals.css";
 import AuthProvider from "@/components/providers/AuthProvider";
+import InAppBrowserBanner from "@/components/dashboard/InAppBrowserBanner";
 
 const roboto = Roboto({ 
   subsets: ["latin", "vietnamese"],
@@ -41,6 +42,7 @@ export default function RootLayout({
       <body className={roboto.className}>
         <AuthProvider>
           <div className="main-wrapper">
+            <InAppBrowserBanner />
             {children}
           </div>
         </AuthProvider>
