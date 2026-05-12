@@ -69,7 +69,9 @@ const UI_STRINGS: any = {
     cancel: 'Hủy',
     confirm: 'Xác nhận',
     noPlans: 'Lịch tập mặc định',
-    sessionPlaceholder: 'Buổi tập: Ngực, Chân...'
+    sessionPlaceholder: 'Buổi tập: Ngực, Chân...',
+    setsLabel: 'hiệp',
+    repsLabel: 'lần'
   },
   en: {
     addEx: 'Add Exercise',
@@ -94,7 +96,9 @@ const UI_STRINGS: any = {
     cancel: 'Cancel',
     confirm: 'Confirm',
     noPlans: 'Default Plan',
-    sessionPlaceholder: 'Session: Chest, Legs...'
+    sessionPlaceholder: 'Session: Chest, Legs...',
+    setsLabel: 'sets',
+    repsLabel: 'reps'
   }
 };
 
@@ -591,8 +595,8 @@ export default function WorkoutGrid({ settings }: { settings: { language: 'vi' |
                       <div className={styles.exerciseInfo}>
                         <h4 title={ex.name} style={{ fontSize: '0.9rem' }}>{ex.name}</h4>
                         <div className={styles.exerciseStats} style={{ fontSize: '0.7rem' }}>
-                          <span className={styles.statTag}>{ex.sets} hiệp</span>
-                          <span className={styles.statTag}>{ex.reps} lần</span>
+                          <span className={styles.statTag}>{ex.sets} {t.setsLabel}</span>
+                          <span className={styles.statTag}>{ex.reps} {t.repsLabel}</span>
                         </div>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

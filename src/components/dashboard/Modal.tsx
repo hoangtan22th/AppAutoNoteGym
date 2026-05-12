@@ -46,17 +46,21 @@ export default function Modal({
             position: 'relative'
           }}
         >
-          {/* Centered Header with more padding */}
-          <div className="p-8 border-b border-gray-100 flex justify-center items-center relative" style={{ borderBottom: '1px solid #f1f5f9', padding: '1.75rem 2rem' }}>
-            <h3 className="text-xl font-black text-gray-900" style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0f172a', textAlign: 'center', margin: 0 }}>
+          {/* Header Section */}
+          <div className="flex justify-between items-center p-6 border-b border-gray-100" style={{ borderBottom: '1px solid #f1f5f9', padding: '1.5rem 2rem' }}>
+            {/* Left Spacer to keep title centered */}
+            <div style={{ width: '40px' }}></div>
+            
+            <h3 className="text-xl font-black text-gray-900" style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0f172a', textAlign: 'center', flex: 1 }}>
               {title}
             </h3>
+            
             <button 
               onClick={onClose} 
-              className="absolute right-6 p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              style={{ background: '#f8fafc', border: 'none', cursor: 'pointer' }}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors flex items-center justify-center"
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer', width: '40px', height: '40px' }}
             >
-              <XMarkIcon className="w-5 h-5 text-gray-500" style={{ width: '1.5rem', height: '1.5rem' }} />
+              <XMarkIcon className="w-6 h-6 text-gray-400 hover:text-gray-900" style={{ width: '1.5rem', height: '1.5rem' }} />
             </button>
           </div>
           
