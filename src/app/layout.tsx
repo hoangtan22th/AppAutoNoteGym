@@ -14,6 +14,10 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "TanGYM",
   },
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export const viewport: Viewport = {

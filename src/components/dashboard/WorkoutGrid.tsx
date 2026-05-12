@@ -200,9 +200,18 @@ export default function WorkoutGrid() {
                           onChange={e => setEditingExercise({ ...editingExercise, data: { ...editingExercise.data, name: e.target.value } })}
                         />
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem' }}>
-                          <input type="number" className="input-field" style={{ padding: '0.6rem' }} value={editingExercise.data.weight} onChange={e => setEditingExercise({ ...editingExercise, data: { ...editingExercise.data, weight: e.target.value } })} />
-                          <input type="number" className="input-field" style={{ padding: '0.6rem' }} value={editingExercise.data.sets} onChange={e => setEditingExercise({ ...editingExercise, data: { ...editingExercise.data, sets: e.target.value } })} />
-                          <input type="number" className="input-field" style={{ padding: '0.6rem' }} value={editingExercise.data.reps} onChange={e => setEditingExercise({ ...editingExercise, data: { ...editingExercise.data, reps: e.target.value } })} />
+                          <div>
+                            <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)' }}>Kg</label>
+                            <input type="number" placeholder="Kg" className="input-field" style={{ padding: '0.6rem' }} value={editingExercise.data.weight} onChange={e => setEditingExercise({ ...editingExercise, data: { ...editingExercise.data, weight: e.target.value } })} />
+                          </div>
+                          <div>
+                            <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)' }}>Hiệp</label>
+                            <input type="number" placeholder="Hiệp" className="input-field" style={{ padding: '0.6rem' }} value={editingExercise.data.sets} onChange={e => setEditingExercise({ ...editingExercise, data: { ...editingExercise.data, sets: e.target.value } })} />
+                          </div>
+                          <div>
+                            <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)' }}>Lần</label>
+                            <input type="number" placeholder="Lần" className="input-field" style={{ padding: '0.6rem' }} value={editingExercise.data.reps} onChange={e => setEditingExercise({ ...editingExercise, data: { ...editingExercise.data, reps: e.target.value } })} />
+                          </div>
                         </div>
                         <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
                           <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleUpdateExercise}>
