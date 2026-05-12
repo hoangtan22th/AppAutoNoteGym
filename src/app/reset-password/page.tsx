@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import styles from '../login/login.module.css';
 
 function ResetPasswordForm() {
@@ -10,6 +11,7 @@ function ResetPasswordForm() {
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -56,7 +58,7 @@ function ResetPasswordForm() {
         <h1 className={styles.title}>Đặt lại mật khẩu</h1>
         <p className={styles.subtitle}>Nhập mã xác nhận và mật khẩu mới</p>
 
-        {error && <div className={styles.error}>{error}</div>}
+        {error && <div className={styles.error} style={{ background: '#fee2e2', color: '#b91c1c', padding: '1rem', borderRadius: '14px', marginBottom: '1.5rem', textAlign: 'center' }}>{error}</div>}
         {message && <div style={{ background: '#ecfdf5', color: '#065f46', padding: '1rem', borderRadius: '14px', marginBottom: '1.5rem', textAlign: 'center' }}>{message}</div>}
 
         <form onSubmit={handleSubmit}>
@@ -87,15 +89,35 @@ function ResetPasswordForm() {
 
           <div className="input-group" style={{ marginBottom: '2rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Mật khẩu mới</label>
-            <input
-              type="password"
-              className="input-field"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              required
-              placeholder="••••••••"
-              minLength={6}
-            />
+            <div style={{ position: 'relative' }}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                className="input-field"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+                placeholder="••••••••"
+                minLength={6}
+                style={{ paddingRight: '3rem' }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{ 
+                  position: 'absolute', 
+                  right: '1rem', 
+                  top: '50%', 
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  color: '#94a3b8',
+                  cursor: 'pointer',
+                  padding: '0.25rem'
+                }}
+              >
+                {showPassword ? <EyeSlashIcon style={{ width: '1.25rem' }} /> : <EyeIcon style={{ width: '1.25rem' }} />}
+              </button>
+            </div>
           </div>
 
           <button

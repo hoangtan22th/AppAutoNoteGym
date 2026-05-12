@@ -133,27 +133,31 @@
 }
 
 .statTag {
-  background: var(--accent);
-  padding: 1px 6px;
-  border-radius: 4px;
+  background: var(--primary-glow);
+  color: var(--primary);
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.75rem;
+  border: 1px solid rgba(37, 99, 235, 0.1);
 }
 
 .weightDisplay {
   text-align: right;
-  min-width: 50px;
+  min-width: 60px;
 }
 
 .weightValue {
   display: block;
-  font-size: 1.15rem;
-  font-weight: 800;
+  font-size: 1.25rem;
+  font-weight: 900;
   color: var(--primary);
   line-height: 1;
 }
 
 .weightUnit {
   font-size: 0.7rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-muted);
   text-transform: uppercase;
 }
@@ -161,7 +165,6 @@
 .actions {
   display: flex;
   gap: 0.4rem;
-  /* Always visible on mobile for better UX */
 }
 
 .actionBtnEdit,
@@ -169,40 +172,40 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
   border: none;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .actionBtnEdit {
-  background: rgba(37, 99, 235, 0.08);
+  background: rgba(37, 99, 235, 0.1);
   color: var(--primary);
 }
 
 .actionBtnEdit:hover {
   background: var(--primary);
   color: white;
-  transform: translateY(-2px);
+  transform: translateY(-2px) rotate(5deg);
 }
 
 .actionBtnDelete {
-  background: rgba(239, 68, 68, 0.08);
+  background: rgba(239, 68, 68, 0.1);
   color: #ef4444;
 }
 
 .actionBtnDelete:hover {
   background: #ef4444;
   color: white;
-  transform: translateY(-2px);
+  transform: translateY(-2px) rotate(-5deg);
 }
 
 @media (min-width: 1024px) {
   .actions {
     opacity: 0;
-    transition: opacity 0.2s ease;
+    transition: all 0.3s ease;
   }
   .exerciseItem:hover .actions {
     opacity: 1;
@@ -210,10 +213,10 @@
 }
 
 .addBtn {
-  background: var(--accent);
+  background: white;
   color: var(--primary);
-  border: 2px dashed var(--primary);
-  padding: 1rem;
+  border: 2px solid var(--primary-glow);
+  padding: 0.85rem;
   border-radius: 16px;
   width: 100%;
   display: flex;
@@ -222,13 +225,16 @@
   gap: 0.5rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
 .addBtn:hover {
   background: var(--primary);
   color: white;
-  border-style: solid;
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.2);
 }
 
 @media (max-width: 768px) {
@@ -236,3 +242,140 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* User Dropdown */
+.dropdownContainer {
+  position: relative;
+}
+
+.userButton {
+  background: rgba(0,0,0,0.05);
+  border: none;
+  border-radius: 50%;
+  padding: 0.15rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  color: var(--primary);
+  width: 36px;
+  height: 36px;
+}
+
+.userButton:hover {
+  background: rgba(0,0,0,0.1);
+  transform: scale(1.05);
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: calc(100% + 0.6rem);
+  right: 0;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(20px);
+  border-radius: 16px;
+  box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  min-width: 170px;
+  padding: 0.4rem;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  animation: dropdownReveal 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top right;
+}
+
+@keyframes dropdownReveal {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.dropdownMenu button {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--foreground);
+}
+
+.dropdownMenu button:hover {
+  background: var(--primary-glow);
+  color: var(--primary);
+  padding-left: 0.85rem;
+}
+
+.logoutBtn {
+  color: #ef4444 !important;
+}
+
+.logoutBtn:hover {
+  background: #fef2f2 !important;
+  color: #dc2626 !important;
+}
+
+/* Notes */
+.generalNotesContainer {
+  margin-top: 3rem;
+  margin-bottom: 2rem;
+}
+
+.generalNotesArea {
+  width: 100%;
+  min-height: 100px;
+  background: white;
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
+  padding: 1.25rem;
+  font-size: 0.95rem;
+  color: var(--foreground);
+  resize: vertical;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  box-shadow: var(--shadow-sm);
+}
+
+.generalNotesArea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.dayNoteArea {
+  width: 100%;
+  min-height: 40px;
+  background: rgba(0,0,0,0.03);
+  border: none;
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  resize: none;
+  margin-bottom: 1rem;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.dayNoteArea:focus {
+  outline: none;
+  background: white;
+  box-shadow: 0 0 0 2px var(--primary-glow);
+  color: var(--foreground);
+}
+

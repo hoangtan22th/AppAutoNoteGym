@@ -12,7 +12,9 @@ import {
   FolderPlusIcon,
   CheckCircleIcon,
   SparklesIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
+  DocumentDuplicateIcon,
+  ArrowDownOnSquareIcon
 } from '@heroicons/react/24/outline';
 import { 
   PencilIcon, 
@@ -24,7 +26,7 @@ import ConfirmModal from './ConfirmModal';
 import Modal from './Modal';
 import LoadingSpinner from './LoadingSpinner';
 
-const DAYS_MAP: any = {
+export const DAYS_MAP: any = {
   vi: {
     'Monday': 'Thứ Hai',
     'Tuesday': 'Thứ Ba',
@@ -47,7 +49,7 @@ const DAYS_MAP: any = {
   }
 };
 
-const UI_STRINGS: any = {
+export const UI_STRINGS: any = {
   vi: {
     addEx: 'Thêm bài tập',
     editEx: 'Chỉnh sửa bài tập',
@@ -74,7 +76,16 @@ const UI_STRINGS: any = {
     sessionPlaceholder: 'Buổi tập: Ngực, Chân...',
     setsLabel: 'hiệp',
     repsLabel: 'lần',
-    processing: 'Đang xử lý...'
+    processing: 'Đang xử lý...',
+    generalNotes: 'Ghi chú tổng quan lịch tập',
+    dayNotes: 'Ghi chú ngày...',
+    duplicate: 'Nhân bản',
+    share: 'Chia sẻ ID',
+    import: 'Nhập lịch từ ID',
+    idCopied: 'Đã sao chép ID!',
+    importSuccess: 'Đã nhập lịch thành công!',
+    invalidId: 'ID không hợp lệ!',
+    copy: 'Sao chép'
   },
   en: {
     addEx: 'Add Exercise',
@@ -102,13 +113,25 @@ const UI_STRINGS: any = {
     sessionPlaceholder: 'Session: Chest, Legs...',
     setsLabel: 'sets',
     repsLabel: 'reps',
-    processing: 'Processing...'
+    processing: 'Processing...',
+    generalNotes: 'Overall plan notes',
+    dayNotes: 'Day notes...',
+    duplicate: 'Duplicate',
+    share: 'Share ID',
+    import: 'Import from ID',
+    idCopied: 'ID Copied!',
+    importSuccess: 'Plan imported successfully!',
+    invalidId: 'Invalid ID!',
+    copy: 'Copy'
   }
 };
 
-const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+export const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-export default function WorkoutGrid({ settings }: { settings: { language: 'vi' | 'en', dayMode: 'weekday' | 'dayNum' } }) {
+export default function WorkoutGrid({ settings, onPlanChange }: { 
+  settings: { language: 'vi' | 'en', dayMode: 'weekday' | 'dayNum' },
+  onPlanChange?: (plan: any) => void
+}) {
   const t = UI_STRINGS[settings.language];
   const daysTrans = DAYS_MAP[settings.language];
 
@@ -251,10 +274,16 @@ export default function WorkoutGrid({ settings }: { settings: { language: 'vi' |
 
   const currentPlan = plans[currentPlanIndex] || null;
 
-  const updateSessionName = async (day: string, name: string) => {
+  useEffect(() => {
+    if (onPlanChange) onPlanChange(currentPlan);
+  }, [currentPlan, onPlanChange]);
+
+  const updateDayInfo = async (day: string, data: { sessionName?: string, notes?: string }) => {
     if (!currentPlan) return;
     const workout = currentPlan.days.find((w: any) => w.dayOfWeek === day);
-    if (workout?.sessionName === name) return;
+    
+    if (data.sessionName !== undefined && workout?.sessionName === data.sessionName) return;
+    if (data.notes !== undefined && workout?.notes === data.notes) return;
     
     try {
       const res = await fetch('/api/workouts', {
@@ -263,8 +292,29 @@ export default function WorkoutGrid({ settings }: { settings: { language: 'vi' |
         body: JSON.stringify({ 
           planId: currentPlan._id,
           dayOfWeek: day, 
-          sessionName: name,
+          sessionName: data.sessionName !== undefined ? data.sessionName : (workout?.sessionName || ''),
+          notes: data.notes !== undefined ? data.notes : (workout?.notes || ''),
           exercises: workout?.exercises || [] 
+        })
+      });
+      if (res.ok) {
+        const updatedPlan = await res.json();
+        setPlans(prev => prev.map(p => p._id === updatedPlan._id ? updatedPlan : p));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const updateGeneralNotes = async (notes: string) => {
+    if (!currentPlan || currentPlan.generalNotes === notes) return;
+    try {
+      const res = await fetch('/api/workouts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          planId: currentPlan._id,
+          generalNotes: notes
         })
       });
       if (res.ok) {
@@ -308,6 +358,76 @@ export default function WorkoutGrid({ settings }: { settings: { language: 'vi' |
       }
     } catch (err) {
       console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDuplicatePlan = async () => {
+    if (!currentPlan) return;
+    setIsSubmitting(true);
+    try {
+      const res = await fetch('/api/workouts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          title: `${currentPlan.title} (${t.copy})`,
+          generalNotes: currentPlan.generalNotes || '',
+          // We don't send days directly because the API creates an empty plan if dayOfWeek is missing.
+          // Instead, we'll create the plan first, then update days in a second step if needed, 
+          // but our current API POST logic allows creating with title.
+        })
+      });
+      if (res.ok) {
+        const newPlan = await res.json();
+        
+        // Update the new plan with the old plan's days
+        const updateRes = await fetch('/api/workouts/duplicate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            fromId: currentPlan._id,
+            toId: newPlan._id
+          })
+        });
+
+        if (updateRes.ok) {
+          const fullyUpdatedPlan = await updateRes.json();
+          setPlans(prev => [fullyUpdatedPlan, ...prev]);
+          setCurrentPlanIndex(0);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCopyId = () => {
+    if (!currentPlan) return;
+    navigator.clipboard.writeText(currentPlan._id);
+    alert(t.idCopied);
+  };
+
+  const handleImportPlan = async () => {
+    const id = prompt(t.import);
+    if (!id) return;
+    
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`/api/workouts/import?planId=${id}`, { method: 'POST' });
+      if (res.ok) {
+        const importedPlan = await res.json();
+        setPlans(prev => [importedPlan, ...prev]);
+        setCurrentPlanIndex(0);
+        alert(t.importSuccess);
+      } else {
+        alert(t.invalidId);
+      }
+    } catch (err) {
+      console.error(err);
+      alert(t.invalidId);
     } finally {
       setIsSubmitting(false);
     }
@@ -572,18 +692,31 @@ export default function WorkoutGrid({ settings }: { settings: { language: 'vi' |
               </div>
             )}
           </div>
-          <div style={{ display: 'flex', gap: '0.4rem' }}>
+          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             <button 
               className="btn" 
-              onClick={confirmDeleteAllOtherPlans}
-              disabled={plans.length <= 1 || isSubmitting}
-              style={{ 
-                background: 'rgba(139, 92, 246, 0.1)', 
-                color: '#8b5cf6', 
-                padding: '0.5rem',
-                opacity: plans.length <= 1 || isSubmitting ? 0.3 : 1
-              }}
-              title={t.cleanup}
+              onClick={handleImportPlan}
+              disabled={isSubmitting}
+              style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: '0.5rem' }}
+              title={t.import}
+            >
+              <ArrowDownOnSquareIcon style={{ width: '1.25rem', height: '1.25rem' }} />
+            </button>
+            <button 
+              className="btn" 
+              onClick={handleCopyId}
+              disabled={!currentPlan || isSubmitting}
+              style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '0.5rem' }}
+              title={t.share}
+            >
+              <DocumentDuplicateIcon style={{ width: '1.25rem', height: '1.25rem' }} />
+            </button>
+            <button 
+              className="btn" 
+              onClick={handleDuplicatePlan}
+              disabled={!currentPlan || isSubmitting}
+              style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', padding: '0.5rem' }}
+              title={t.duplicate}
             >
               <SparklesIcon style={{ width: '1.25rem', height: '1.25rem' }} />
             </button>
@@ -629,11 +762,20 @@ export default function WorkoutGrid({ settings }: { settings: { language: 'vi' |
                   className={styles.sessionInput}
                   placeholder={t.sessionPlaceholder}
                   defaultValue={workout?.sessionName || ''}
-                  onBlur={(e) => updateSessionName(day, e.target.value)}
+                  onBlur={(e) => updateDayInfo(day, { sessionName: e.target.value })}
                   disabled={isSubmitting}
                   style={{ fontSize: '0.85rem' }}
                 />
               </div>
+              
+              <textarea 
+                key={`${currentPlan?._id}-${day}-notes`}
+                className={styles.dayNoteArea}
+                placeholder={t.dayNotes}
+                defaultValue={workout?.notes || ''}
+                onBlur={(e) => updateDayInfo(day, { notes: e.target.value })}
+                disabled={isSubmitting}
+              />
               
               <ul className={styles.exerciseList}>
                 {workout?.exercises?.length > 0 ? (
@@ -677,6 +819,16 @@ export default function WorkoutGrid({ settings }: { settings: { language: 'vi' |
             </div>
           );
         })}
+      </div>
+      <div className={styles.generalNotesContainer}>
+        <textarea 
+          key={`${currentPlan?._id}-general-notes`}
+          className={styles.generalNotesArea}
+          placeholder={t.generalNotes}
+          defaultValue={currentPlan?.generalNotes || ''}
+          onBlur={(e) => updateGeneralNotes(e.target.value)}
+          disabled={isSubmitting}
+        />
       </div>
     </div>
   );

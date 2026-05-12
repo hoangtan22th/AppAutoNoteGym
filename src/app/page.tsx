@@ -7,14 +7,20 @@ import WorkoutGrid from '@/components/dashboard/WorkoutGrid';
 import InstallPWA from '@/components/dashboard/InstallPWA';
 import SettingsModal from '@/components/dashboard/SettingsModal';
 import styles from './dashboard.module.css';
-import { BoltIcon, FireIcon, Cog6ToothIcon } from '@heroicons/react/24/solid';
-import SignOutButton from '@/components/auth/SignOutButton';
+import { BoltIcon, FireIcon } from '@heroicons/react/24/solid';
 import LoadingSpinner from '@/components/dashboard/LoadingSpinner';
+import UserDropdown from '@/components/dashboard/UserDropdown';
+import html2canvas from 'html2canvas';
+import PrintableSchedule from '@/components/dashboard/PrintableSchedule';
+import { DAYS_MAP, UI_STRINGS, DAYS } from '@/components/dashboard/WorkoutGrid';
+import { useRef } from 'react';
 
 export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [currentPlanData, setCurrentPlanData] = useState<any>(null);
+  const printRef = useRef<HTMLDivElement>(null);
   const [settings, setSettings] = useState<{ language: 'vi' | 'en', dayMode: 'weekday' | 'dayNum' }>({
     language: 'vi',
     dayMode: 'weekday'
@@ -25,6 +31,26 @@ export default function Home() {
       router.push('/login');
     }
   }, [status, router]);
+
+  const handlePrint = async () => {
+    if (!printRef.current || !currentPlanData) return;
+    
+    // Temporarily show the element or just rely on it being in the DOM but off-screen
+    const canvas = await html2canvas(printRef.current, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: '#ffffff',
+      width: 1800, // Match the component's width
+      height: printRef.current.offsetHeight
+    });
+    
+    const dataUrl = canvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.download = `TanGYM-${currentPlanData.title}-${new Date().toISOString().split('T')[0]}.png`;
+    link.href = dataUrl;
+    link.click();
+  };
 
   if (status === 'loading') {
     return <LoadingSpinner fullScreen />;
@@ -44,17 +70,11 @@ export default function Home() {
             {settings.language === 'vi' ? `Chào ${session.user?.name}, hôm nay bạn tập gì thế?` : `Hello ${session.user?.name}, what's your workout today?`}
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <button 
-            className="btn" 
-            onClick={() => setIsSettingsOpen(true)}
-            style={{ padding: '0.6rem', background: 'rgba(0,0,0,0.05)' }}
-            title={settings.language === 'vi' ? 'Cài đặt' : 'Settings'}
-          >
-            <Cog6ToothIcon style={{ width: '1.25rem', height: '1.25rem' }} />
-          </button>
-          <SignOutButton />
-        </div>
+        <UserDropdown 
+          language={settings.language} 
+          onSettingsOpen={() => setIsSettingsOpen(true)} 
+          onPrint={handlePrint} 
+        />
       </header>
 
       <SettingsModal 
@@ -63,38 +83,52 @@ export default function Home() {
         onSettingsChange={(newSettings) => setSettings(newSettings)}
       />
 
-      <div className="glass animate-slide-up" style={{ 
-        padding: '1.25rem', 
-        borderRadius: '24px', 
-        marginBottom: '1.5rem',
-        background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)',
-        color: 'white',
-        border: 'none',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '1rem'
-      }}>
-        <div style={{ 
-          background: 'rgba(255,255,255,0.2)', 
-          padding: '0.75rem', 
-          borderRadius: '16px',
-          backdropFilter: 'blur(10px)'
+      <div id="workout-grid-container" style={{ padding: '0.1rem' }}>
+        <div className="glass animate-slide-up" style={{ 
+          padding: '1.25rem', 
+          borderRadius: '24px', 
+          marginBottom: '1.5rem',
+          background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)',
+          color: 'white',
+          border: 'none',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '1rem'
         }}>
-          <FireIcon className="w-6 h-6" style={{ width: '1.5rem', height: '1.5rem' }} />
+          <div style={{ 
+            background: 'rgba(255,255,255,0.2)', 
+            padding: '0.75rem', 
+            borderRadius: '16px',
+            backdropFilter: 'blur(10px)'
+          }}>
+            <FireIcon className="w-6 h-6" style={{ width: '1.5rem', height: '1.5rem' }} />
+          </div>
+          <div>
+            <h2 style={{ fontSize: '1.15rem', fontWeight: 800, marginBottom: '0.1rem' }}>
+              {settings.language === 'vi' ? 'Lịch tập tuần này' : 'Weekly Workout Plan'}
+            </h2>
+            <p style={{ opacity: 0.9, fontSize: '0.85rem' }}>
+              {settings.language === 'vi' ? 'Theo dõi khối lượng tạ mỗi ngày.' : 'Track your weights daily.'}
+            </p>
+          </div>
         </div>
-        <div>
-          <h2 style={{ fontSize: '1.15rem', fontWeight: 800, marginBottom: '0.1rem' }}>
-            {settings.language === 'vi' ? 'Lịch tập tuần này' : 'Weekly Workout Plan'}
-          </h2>
-          <p style={{ opacity: 0.9, fontSize: '0.85rem' }}>
-            {settings.language === 'vi' ? 'Theo dõi khối lượng tạ mỗi ngày.' : 'Track your weights daily.'}
-          </p>
-        </div>
+
+        <InstallPWA />
+
+        <WorkoutGrid 
+          settings={settings} 
+          onPlanChange={(plan) => setCurrentPlanData(plan)}
+        />
       </div>
 
-      <InstallPWA />
-
-      <WorkoutGrid settings={settings} />
+      <PrintableSchedule 
+        ref={printRef}
+        plan={currentPlanData}
+        settings={settings}
+        daysTrans={DAYS_MAP[settings.language]}
+        uiStrings={UI_STRINGS[settings.language]}
+        days={DAYS}
+      />
 
       <footer style={{ 
         marginTop: '4rem', 

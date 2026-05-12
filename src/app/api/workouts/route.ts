@@ -51,7 +51,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
-  const { planId, title, dayOfWeek, exercises, sessionName } = await req.json();
+  const { planId, title, dayOfWeek, exercises, sessionName, notes, generalNotes } = await req.json();
   const userId = (session.user as any).id;
 
   await dbConnect();
@@ -60,7 +60,7 @@ export async function POST(req: Request) {
   if (planId) {
     plan = await WorkoutPlan.findOne({ _id: planId, userId });
   } else if (title && !dayOfWeek) {
-    plan = new WorkoutPlan({ userId, title, days: [] });
+    plan = new WorkoutPlan({ userId, title, generalNotes: generalNotes || '', days: [] });
     await plan.save();
     return NextResponse.json(plan);
   }
@@ -69,17 +69,19 @@ export async function POST(req: Request) {
     plan = new WorkoutPlan({
       userId,
       title: title || 'Lịch tập của tôi',
-      days: dayOfWeek ? [{ dayOfWeek, exercises, sessionName }] : []
+      generalNotes: generalNotes || '',
+      days: dayOfWeek ? [{ dayOfWeek, exercises, sessionName, notes: notes || '' }] : []
     });
   } else if (plan && dayOfWeek) {
     const dayIndex = plan.days.findIndex((d: any) => d.dayOfWeek === dayOfWeek);
     if (dayIndex > -1) {
-      plan.days[dayIndex] = { dayOfWeek, exercises, sessionName };
+      plan.days[dayIndex] = { dayOfWeek, exercises, sessionName, notes: notes || '' };
     } else {
-      plan.days.push({ dayOfWeek, exercises, sessionName });
+      plan.days.push({ dayOfWeek, exercises, sessionName, notes: notes || '' });
     }
-  } else if (plan && title) {
-    plan.title = title;
+  } else if (plan) {
+    if (title !== undefined) plan.title = title;
+    if (generalNotes !== undefined) plan.generalNotes = generalNotes;
   }
 
   await plan.save();

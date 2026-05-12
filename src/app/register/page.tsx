@@ -129,16 +129,36 @@ export default function RegisterPage() {
 
           <div className={styles.inputGroup}>
             <label htmlFor="confirmPassword" className={styles.inputLabel}>Nhập lại mật khẩu</label>
-            <input
-              type={showPassword ? 'text' : 'password'}
-              id="confirmPassword"
-              className="input-field"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              placeholder="••••••••"
-              minLength={6}
-            />
+            <div style={{ position: 'relative' }}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                id="confirmPassword"
+                className="input-field"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                placeholder="••••••••"
+                minLength={6}
+                style={{ paddingRight: '3rem' }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{ 
+                  position: 'absolute', 
+                  right: '1rem', 
+                  top: '50%', 
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  color: '#94a3b8',
+                  cursor: 'pointer',
+                  padding: '0.25rem'
+                }}
+              >
+                {showPassword ? <EyeSlashIcon style={{ width: '1.25rem' }} /> : <EyeIcon style={{ width: '1.25rem' }} />}
+              </button>
+            </div>
           </div>
 
           <button
