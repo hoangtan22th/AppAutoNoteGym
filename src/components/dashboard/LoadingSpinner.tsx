@@ -1,38 +1,41 @@
 'use client';
 
-import { ArrowPathIcon } from '@heroicons/react/24/outline';
-
 export default function LoadingSpinner({ fullScreen = false }: { fullScreen?: boolean }) {
   const spinner = (
-    <div className="flex flex-col items-center justify-center gap-3">
-      <div className="relative flex items-center justify-center">
-        <ArrowPathIcon 
-          className="w-7 h-7 text-blue-600 animate-spin" 
-          style={{ 
-            color: 'var(--primary)', 
-            animationDuration: '0.8s',
-          }} 
-        />
-      </div>
-
-      <p className="text-[10px] font-bold text-gray-400 tracking-[0.2em]" style={{ fontWeight: 800, color: '#94a3b8' }}>
-        LOADING
-      </p>
+    <div className="spinner-container">
+      <div className="circular-loader"></div>
+      <style jsx>{`
+        .spinner-container {
+          display: flex;
+          align-items: center;
+          justify-center: center;
+        }
+        .circular-loader {
+          width: 24px;
+          height: 24px;
+          border: 3px solid rgba(37, 99, 235, 0.1);
+          border-top: 3px solid var(--primary);
+          border-radius: 50%;
+          animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 
   if (fullScreen) {
     return (
-      <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-white/60 backdrop-blur-sm">
-        <div className="bg-white p-6 rounded-2xl shadow-xl border border-gray-100 flex items-center justify-center">
-          {spinner}
-        </div>
+      <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-white/50 backdrop-blur-[2px]">
+        {spinner}
       </div>
     );
   }
 
   return (
-    <div className="py-8 flex justify-center w-full">
+    <div className="py-4 flex justify-center w-full">
       {spinner}
     </div>
   );
