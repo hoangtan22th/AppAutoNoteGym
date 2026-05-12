@@ -21,6 +21,7 @@ import {
 import styles from '@/app/dashboard.module.css';
 import ConfirmModal from './ConfirmModal';
 import Modal from './Modal';
+import LoadingSpinner from './LoadingSpinner';
 
 const DAYS_MAP: any = {
   vi: {
@@ -393,7 +394,7 @@ export default function WorkoutGrid({ settings }: { settings: { language: 'vi' |
     return daysTrans[dayName];
   };
 
-  if (loading) return <div className="container" style={{ textAlign: 'center', padding: '3rem' }}>{t.loading}</div>;
+  if (loading) return <LoadingSpinner />;
 
   return (
     <div>

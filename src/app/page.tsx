@@ -9,6 +9,7 @@ import SettingsModal from '@/components/dashboard/SettingsModal';
 import styles from './dashboard.module.css';
 import { BoltIcon, FireIcon, Cog6ToothIcon } from '@heroicons/react/24/solid';
 import SignOutButton from '@/components/auth/SignOutButton';
+import LoadingSpinner from '@/components/dashboard/LoadingSpinner';
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -26,7 +27,7 @@ export default function Home() {
   }, [status, router]);
 
   if (status === 'loading') {
-    return <div className="container" style={{ textAlign: 'center', padding: '5rem' }}>Đang tải...</div>;
+    return <LoadingSpinner fullScreen />;
   }
 
   if (!session) return null;
