@@ -18,7 +18,11 @@ const WorkoutPlanSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'User',
     required: true,
-    unique: true, // 1-1 Relationship
+  },
+  title: {
+    type: String,
+    default: 'Lịch tập mặc định',
+    required: true,
   },
   days: [DayPlanSchema],
 }, { timestamps: true });

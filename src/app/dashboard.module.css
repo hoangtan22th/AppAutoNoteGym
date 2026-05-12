@@ -1,26 +1,27 @@
 .dashboard {
-  padding: 3rem 1rem;
+  padding: 1.5rem 0.5rem;
 }
 
 .header {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.5rem;
 }
 
 .titleSection h1 {
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 800;
   background: linear-gradient(to right, var(--primary), var(--secondary));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.1rem;
 }
 
 .titleSection p {
   color: var(--text-muted);
-  font-size: 0.95rem;
+  font-size: 0.85rem;
 }
 
 .weekGrid {

@@ -32,8 +32,8 @@
 
 * {
   box-sizing: border-box;
-  padding: 0;
   margin: 0;
+  padding: 0;
 }
 
 body {
@@ -42,6 +42,8 @@ body {
   font-family: 'Outfit', 'Inter', system-ui, sans-serif;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 /* Glassmorphism utility */
@@ -56,7 +58,7 @@ body {
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 1rem 0.75rem;
+  padding: 0.75rem 0.5rem; /* Smaller padding */
 }
 
 .btn {
@@ -114,6 +116,24 @@ body {
 }
 
 /* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; backdrop-filter: blur(0px); }
+  to { opacity: 1; backdrop-filter: blur(8px); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.9) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }

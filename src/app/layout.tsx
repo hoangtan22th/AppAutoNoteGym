@@ -1,9 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Roboto } from "next/font/google";
 import "./globals.css";
 import AuthProvider from "@/components/providers/AuthProvider";
 
-const inter = Inter({ subsets: ["latin"] });
+const roboto = Roboto({ 
+  subsets: ["latin", "vietnamese"],
+  weight: ["300", "400", "500", "700", "900"]
+});
 
 export const metadata: Metadata = {
   title: "TanGYM - Ghi chép lịch tập gym chuyên nghiệp",
@@ -35,7 +38,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={roboto.className}>
         <AuthProvider>
           <div className="main-wrapper">
             {children}

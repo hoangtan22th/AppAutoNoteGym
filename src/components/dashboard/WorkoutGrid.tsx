@@ -1,39 +1,148 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { PlusIcon, CalendarIcon, BoltIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import { PencilIcon, TrashIcon } from '@heroicons/react/24/solid';
+import { 
+  PlusIcon, 
+  CalendarIcon, 
+  BoltIcon, 
+  CheckIcon, 
+  XMarkIcon, 
+  PencilSquareIcon,
+  TrashIcon,
+  FolderPlusIcon,
+  CheckCircleIcon,
+  SparklesIcon
+} from '@heroicons/react/24/outline';
+import { 
+  PencilIcon, 
+  TrashIcon as TrashIconSolid, 
+  FolderPlusIcon as FolderPlusIconSolid 
+} from '@heroicons/react/24/solid';
 import styles from '@/app/dashboard.module.css';
+import ConfirmModal from './ConfirmModal';
+import Modal from './Modal';
 
-const DAYS_VN: { [key: string]: string } = {
-  'Monday': 'Thứ Hai',
-  'Tuesday': 'Thứ Ba',
-  'Wednesday': 'Thứ Tư',
-  'Thursday': 'Thứ Năm',
-  'Friday': 'Thứ Sáu',
-  'Saturday': 'Thứ Bảy',
-  'Sunday': 'Chủ Nhật'
+const DAYS_MAP: any = {
+  vi: {
+    'Monday': 'Thứ Hai',
+    'Tuesday': 'Thứ Ba',
+    'Wednesday': 'Thứ Tư',
+    'Thursday': 'Thứ Năm',
+    'Friday': 'Thứ Sáu',
+    'Saturday': 'Thứ Bảy',
+    'Sunday': 'Chủ Nhật',
+    day: 'Ngày'
+  },
+  en: {
+    'Monday': 'Monday',
+    'Tuesday': 'Tuesday',
+    'Wednesday': 'Wednesday',
+    'Thursday': 'Thursday',
+    'Friday': 'Friday',
+    'Saturday': 'Saturday',
+    'Sunday': 'Sunday',
+    day: 'Day'
+  }
+};
+
+const UI_STRINGS: any = {
+  vi: {
+    addEx: 'Thêm bài tập',
+    editEx: 'Chỉnh sửa bài tập',
+    exName: 'Tên bài tập',
+    weight: 'Khối lượng (Kg)',
+    sets: 'Số hiệp',
+    reps: 'Số lần/hiệp',
+    save: 'Lưu thay đổi',
+    add: 'Thêm vào lịch tập',
+    deletePlan: 'Xóa lịch tập?',
+    deleteEx: 'Xóa bài tập?',
+    empty: 'Trống',
+    loading: 'Đang tải...',
+    cleanup: 'Dọn dẹp lịch khác',
+    create: 'Tạo lịch mới',
+    rename: 'Đổi tên',
+    confirmDeletePlan: 'Toàn bộ dữ liệu của lịch tập này sẽ bị xóa vĩnh viễn. Bạn có chắc chắn?',
+    confirmDeleteEx: 'Bạn có chắc chắn muốn xóa bài tập này khỏi lịch tập?',
+    confirmCleanup: (count: number, title: string) => `Tất cả ${count} lịch tập khác sẽ bị xóa. Chỉ giữ lại duy nhất lịch tập "${title}". Bạn có chắc chắn?`,
+    limit: 'Bạn phải giữ lại ít nhất một lịch tập mặc định!',
+    cancel: 'Hủy',
+    confirm: 'Xác nhận',
+    noPlans: 'Lịch tập mặc định',
+    sessionPlaceholder: 'Buổi tập: Ngực, Chân...'
+  },
+  en: {
+    addEx: 'Add Exercise',
+    editEx: 'Edit Exercise',
+    exName: 'Exercise Name',
+    weight: 'Weight (Kg)',
+    sets: 'Sets',
+    reps: 'Reps',
+    save: 'Save Changes',
+    add: 'Add to Plan',
+    deletePlan: 'Delete Plan?',
+    deleteEx: 'Delete Exercise?',
+    empty: 'Empty',
+    loading: 'Loading...',
+    cleanup: 'Cleanup Others',
+    create: 'New Plan',
+    rename: 'Rename',
+    confirmDeletePlan: 'All data for this plan will be permanently deleted. Are you sure?',
+    confirmDeleteEx: 'Are you sure you want to delete this exercise?',
+    confirmCleanup: (count: number, title: string) => `All ${count} other plans will be deleted. Only "${title}" will be kept. Are you sure?`,
+    limit: 'You must keep at least one default plan!',
+    cancel: 'Cancel',
+    confirm: 'Confirm',
+    noPlans: 'Default Plan',
+    sessionPlaceholder: 'Session: Chest, Legs...'
+  }
 };
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-export default function WorkoutGrid() {
-  const [workouts, setWorkouts] = useState<any[]>([]);
+export default function WorkoutGrid({ settings }: { settings: { language: 'vi' | 'en', dayMode: 'weekday' | 'dayNum' } }) {
+  const t = UI_STRINGS[settings.language];
+  const daysTrans = DAYS_MAP[settings.language];
+
+  const [plans, setPlans] = useState<any[]>([]);
+  const [currentPlanIndex, setCurrentPlanIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [activeDay, setActiveDay] = useState<string | null>(null);
   const [editingExercise, setEditingExercise] = useState<{ day: string, index: number, data: any } | null>(null);
   const [newExercise, setNewExercise] = useState({ name: '', weight: '', sets: '', reps: '' });
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [newTitle, setNewTitle] = useState('');
+
+  // Modal states
+  const [modalConfig, setModalConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    variant: 'danger' | 'primary';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    variant: 'primary'
+  });
 
   useEffect(() => {
-    fetchWorkouts();
+    fetchPlans();
   }, []);
 
-  const fetchWorkouts = async () => {
+  const fetchPlans = async () => {
+    setLoading(true);
     try {
       const res = await fetch('/api/workouts');
       if (res.ok) {
         const data = await res.json();
-        setWorkouts(data);
+        if (data.length === 0) {
+          await handleCreatePlan(t.noPlans, true);
+        } else {
+          setPlans(data);
+        }
       }
     } catch (err) {
       console.error(err);
@@ -42,37 +151,117 @@ export default function WorkoutGrid() {
     }
   };
 
-  const updateSessionName = async (day: string, name: string) => {
-    const workout = workouts.find(w => w.dayOfWeek === day);
-    if (workout?.sessionName === name) return;
-    
+  const handleCreatePlan = async (title: string, isInitial = false) => {
     try {
-      await fetch('/api/workouts', {
+      const res = await fetch('/api/workouts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          dayOfWeek: day, 
-          sessionName: name,
-          exercises: workout?.exercises || [] 
-        })
+        body: JSON.stringify({ title })
       });
-      setWorkouts(prev => {
-        const existing = prev.find(w => w.dayOfWeek === day);
-        if (existing) {
-          return prev.map(w => w.dayOfWeek === day ? { ...w, sessionName: name } : w);
+      if (res.ok) {
+        const newPlan = await res.json();
+        if (isInitial) {
+          setPlans([newPlan]);
         } else {
-          return [...prev, { dayOfWeek: day, sessionName: name, exercises: [] }];
+          setPlans(prev => [newPlan, ...prev]);
         }
-      });
+        setCurrentPlanIndex(0);
+      }
     } catch (err) {
       console.error(err);
     }
   };
 
-  const handleAddExercise = async (day: string) => {
-    if (!newExercise.name) return;
+  const confirmDeletePlan = (id: string) => {
+    if (plans.length <= 1) {
+      setModalConfig({
+        isOpen: true,
+        title: t.noPlans,
+        message: t.limit,
+        onConfirm: () => setModalConfig(prev => ({ ...prev, isOpen: false })),
+        variant: 'primary'
+      });
+      return;
+    }
 
-    const workout = workouts.find(w => w.dayOfWeek === day);
+    setModalConfig({
+      isOpen: true,
+      title: t.deletePlan,
+      message: t.confirmDeletePlan,
+      onConfirm: () => handleDeletePlan(id),
+      variant: 'danger'
+    });
+  };
+
+  const handleDeletePlan = async (id: string) => {
+    try {
+      const res = await fetch(`/api/workouts?planId=${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        const updatedPlans = plans.filter(p => p._id !== id);
+        setPlans(updatedPlans);
+        setCurrentPlanIndex(0);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const confirmDeleteAllOtherPlans = () => {
+    if (plans.length <= 1) return;
+    
+    setModalConfig({
+      isOpen: true,
+      title: t.cleanup,
+      message: t.confirmCleanup(plans.length - 1, currentPlan?.title),
+      onConfirm: handleDeleteAllOthers,
+      variant: 'danger'
+    });
+  };
+
+  const handleDeleteAllOthers = async () => {
+    if (!currentPlan) return;
+    try {
+      const res = await fetch(`/api/workouts?planId=${currentPlan._id}&deleteAllExcept=true`, { method: 'DELETE' });
+      if (res.ok) {
+        setPlans([currentPlan]);
+        setCurrentPlanIndex(0);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const currentPlan = plans[currentPlanIndex] || null;
+
+  const updateSessionName = async (day: string, name: string) => {
+    if (!currentPlan) return;
+    const workout = currentPlan.days.find((w: any) => w.dayOfWeek === day);
+    if (workout?.sessionName === name) return;
+    
+    try {
+      const res = await fetch('/api/workouts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          planId: currentPlan._id,
+          dayOfWeek: day, 
+          sessionName: name,
+          exercises: workout?.exercises || [] 
+        })
+      });
+      if (res.ok) {
+        const updatedPlan = await res.json();
+        setPlans(prev => prev.map(p => p._id === updatedPlan._id ? updatedPlan : p));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleAddExercise = async () => {
+    if (!newExercise.name || !currentPlan || !activeDay) return;
+
+    const workout = currentPlan.days.find((w: any) => w.dayOfWeek === activeDay);
     const updatedExercises = [...(workout?.exercises || []), {
       name: newExercise.name,
       weight: parseFloat(newExercise.weight || '0'),
@@ -85,14 +274,16 @@ export default function WorkoutGrid() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          dayOfWeek: day, 
+          planId: currentPlan._id,
+          dayOfWeek: activeDay, 
           exercises: updatedExercises,
           sessionName: workout?.sessionName || ''
         })
       });
 
       if (res.ok) {
-        fetchWorkouts();
+        const updatedPlan = await res.json();
+        setPlans(prev => prev.map(p => p._id === updatedPlan._id ? updatedPlan : p));
         setNewExercise({ name: '', weight: '', sets: '', reps: '' });
         setActiveDay(null);
       }
@@ -102,10 +293,10 @@ export default function WorkoutGrid() {
   };
 
   const handleUpdateExercise = async () => {
-    if (!editingExercise) return;
+    if (!editingExercise || !currentPlan) return;
     const { day, index, data } = editingExercise;
 
-    const workout = workouts.find(w => w.dayOfWeek === day);
+    const workout = currentPlan.days.find((w: any) => w.dayOfWeek === day);
     const updatedExercises = [...workout.exercises];
     updatedExercises[index] = {
       ...data,
@@ -119,6 +310,7 @@ export default function WorkoutGrid() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
+          planId: currentPlan._id,
           dayOfWeek: day, 
           exercises: updatedExercises,
           sessionName: workout.sessionName
@@ -126,7 +318,8 @@ export default function WorkoutGrid() {
       });
 
       if (res.ok) {
-        fetchWorkouts();
+        const updatedPlan = await res.json();
+        setPlans(prev => prev.map(p => p._id === updatedPlan._id ? updatedPlan : p));
         setEditingExercise(null);
       }
     } catch (err) {
@@ -134,10 +327,20 @@ export default function WorkoutGrid() {
     }
   };
 
-  const deleteExercise = async (day: string, index: number) => {
-    if (!confirm('Bạn có chắc muốn xóa bài tập này?')) return;
+  const confirmDeleteExercise = (day: string, index: number) => {
+    setModalConfig({
+      isOpen: true,
+      title: t.deleteEx,
+      message: t.confirmDeleteEx,
+      onConfirm: () => deleteExercise(day, index),
+      variant: 'danger'
+    });
+  };
 
-    const workout = workouts.find(w => w.dayOfWeek === day);
+  const deleteExercise = async (day: string, index: number) => {
+    if (!currentPlan) return;
+
+    const workout = currentPlan.days.find((w: any) => w.dayOfWeek === day);
     const updatedExercises = workout.exercises.filter((_: any, i: number) => i !== index);
 
     try {
@@ -145,6 +348,7 @@ export default function WorkoutGrid() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
+          planId: currentPlan._id,
           dayOfWeek: day, 
           exercises: updatedExercises,
           sessionName: workout.sessionName
@@ -152,155 +356,277 @@ export default function WorkoutGrid() {
       });
 
       if (res.ok) {
-        fetchWorkouts();
+        const updatedPlan = await res.json();
+        setPlans(prev => prev.map(p => p._id === updatedPlan._id ? updatedPlan : p));
       }
     } catch (err) {
       console.error(err);
     }
   };
 
-  if (loading) return <div className="container" style={{ textAlign: 'center', padding: '3rem' }}>Đang tải lịch tập...</div>;
+  const handleRename = async () => {
+    if (!newTitle || !currentPlan) return;
+    try {
+      const res = await fetch('/api/workouts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ planId: currentPlan._id, title: newTitle })
+      });
+      if (res.ok) {
+        const updatedPlan = await res.json();
+        setPlans(prev => prev.map(p => p._id === updatedPlan._id ? updatedPlan : p));
+        setIsRenaming(false);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const getDayLabel = (dayName: string, index: number) => {
+    if (settings.dayMode === 'dayNum') {
+      return `${daysTrans.day} ${index + 1}`;
+    }
+    return daysTrans[dayName];
+  };
+
+  if (loading) return <div className="container" style={{ textAlign: 'center', padding: '3rem' }}>{t.loading}</div>;
 
   return (
-    <div className={styles.weekGrid}>
-      {DAYS.map(day => {
-        const workout = workouts.find(w => w.dayOfWeek === day);
-        const isAdding = activeDay === day;
+    <div>
+      <ConfirmModal 
+        isOpen={modalConfig.isOpen}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        onConfirm={modalConfig.onConfirm}
+        onClose={() => setModalConfig(prev => ({ ...prev, isOpen: false }))}
+        variant={modalConfig.variant}
+        confirmText={t.confirm}
+        cancelText={t.cancel}
+      />
 
-        return (
-          <div key={day} className={`${styles.dayCard} animate-slide-up`}>
-            <div className={styles.dayHeader}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3 className={styles.dayTitle}>{DAYS_VN[day]}</h3>
-                <CalendarIcon style={{ width: '1.2rem', height: '1.2rem', color: 'var(--text-muted)' }} />
-              </div>
+      <Modal 
+        isOpen={!!activeDay} 
+        onClose={() => setActiveDay(null)} 
+        title={`${t.addEx} - ${getDayLabel(activeDay || 'Monday', DAYS.indexOf(activeDay || 'Monday'))}`}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div>
+            <label className={styles.labelSmall}>{t.exName}</label>
+            <input
+              type="text"
+              placeholder="VD: Bench Press..."
+              className="input-field"
+              value={newExercise.name}
+              onChange={e => setNewExercise({ ...newExercise, name: e.target.value })}
+            />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
+            <div>
+              <label className={styles.labelSmall}>Kg</label>
+              <input type="number" placeholder="0" className="input-field" value={newExercise.weight} onChange={e => setNewExercise({ ...newExercise, weight: e.target.value })} />
+            </div>
+            <div>
+              <label className={styles.labelSmall}>H</label>
+              <input type="number" placeholder="0" className="input-field" value={newExercise.sets} onChange={e => setNewExercise({ ...newExercise, sets: e.target.value })} />
+            </div>
+            <div>
+              <label className={styles.labelSmall}>L</label>
+              <input type="number" placeholder="0" className="input-field" value={newExercise.reps} onChange={e => setNewExercise({ ...newExercise, reps: e.target.value })} />
+            </div>
+          </div>
+          <button className="btn btn-primary" style={{ width: '100%', padding: '1rem', marginTop: '0.5rem' }} onClick={handleAddExercise}>
+            {t.add}
+          </button>
+        </div>
+      </Modal>
+
+      <Modal 
+        isOpen={!!editingExercise} 
+        onClose={() => setEditingExercise(null)} 
+        title={t.editEx}
+      >
+        {editingExercise && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div>
+              <label className={styles.labelSmall}>{t.exName}</label>
               <input
                 type="text"
-                className={styles.sessionInput}
-                placeholder="Nhập tên buổi tập..."
-                defaultValue={workout?.sessionName || ''}
-                onBlur={(e) => updateSessionName(day, e.target.value)}
+                className="input-field"
+                value={editingExercise.data.name}
+                onChange={e => setEditingExercise({ ...editingExercise, data: { ...editingExercise.data, name: e.target.value } })}
               />
             </div>
-            
-            <ul className={styles.exerciseList}>
-              {workout?.exercises?.length > 0 ? (
-                workout.exercises.map((ex: any, idx: number) => {
-                  const isEditing = editingExercise?.day === day && editingExercise?.index === idx;
-                  
-                  if (isEditing) {
-                    return (
-                      <li key={idx} className="glass" style={{ padding: '1rem', borderRadius: '16px', marginBottom: '0.75rem', border: '1px solid var(--primary)' }}>
-                        <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--primary)', marginBottom: '0.25rem', display: 'block' }}>Tên bài tập</label>
-                        <input
-                          type="text"
-                          className="input-field"
-                          style={{ marginBottom: '0.75rem', padding: '0.6rem' }}
-                          value={editingExercise.data.name}
-                          onChange={e => setEditingExercise({ ...editingExercise, data: { ...editingExercise.data, name: e.target.value } })}
-                        />
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem' }}>
-                          <div>
-                            <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)' }}>Kg</label>
-                            <input type="number" placeholder="Kg" className="input-field" style={{ padding: '0.6rem' }} value={editingExercise.data.weight} onChange={e => setEditingExercise({ ...editingExercise, data: { ...editingExercise.data, weight: e.target.value } })} />
-                          </div>
-                          <div>
-                            <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)' }}>Hiệp</label>
-                            <input type="number" placeholder="Hiệp" className="input-field" style={{ padding: '0.6rem' }} value={editingExercise.data.sets} onChange={e => setEditingExercise({ ...editingExercise, data: { ...editingExercise.data, sets: e.target.value } })} />
-                          </div>
-                          <div>
-                            <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)' }}>Lần</label>
-                            <input type="number" placeholder="Lần" className="input-field" style={{ padding: '0.6rem' }} value={editingExercise.data.reps} onChange={e => setEditingExercise({ ...editingExercise, data: { ...editingExercise.data, reps: e.target.value } })} />
-                          </div>
-                        </div>
-                        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
-                          <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleUpdateExercise}>
-                            Lưu
-                          </button>
-                          <button className="btn" onClick={() => setEditingExercise(null)}>
-                            Hủy
-                          </button>
-                        </div>
-                      </li>
-                    );
-                  }
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
+              <div>
+                <label className={styles.labelSmall}>Kg</label>
+                <input type="number" className="input-field" value={editingExercise.data.weight} onChange={e => setEditingExercise({ ...editingExercise, data: { ...editingExercise.data, weight: e.target.value } })} />
+              </div>
+              <div>
+                <label className={styles.labelSmall}>H</label>
+                <input type="number" className="input-field" value={editingExercise.data.sets} onChange={e => setEditingExercise({ ...editingExercise, data: { ...editingExercise.data, sets: e.target.value } })} />
+              </div>
+              <div>
+                <label className={styles.labelSmall}>L</label>
+                <input type="number" className="input-field" value={editingExercise.data.reps} onChange={e => setEditingExercise({ ...editingExercise, data: { ...editingExercise.data, reps: e.target.value } })} />
+              </div>
+            </div>
+            <button className="btn btn-primary" style={{ width: '100%', padding: '1rem', marginTop: '0.5rem' }} onClick={handleUpdateExercise}>
+              {t.save}
+            </button>
+          </div>
+        )}
+      </Modal>
 
-                  return (
-                    <li key={idx} className={styles.exerciseItem}>
+      <div className="glass" style={{ padding: '0.75rem', borderRadius: '16px', marginBottom: '1.25rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {isRenaming ? (
+              <div style={{ display: 'flex', gap: '0.25rem' }}>
+                <input 
+                  className="input-field" 
+                  value={newTitle} 
+                  onChange={e => setNewTitle(e.target.value)} 
+                  autoFocus
+                  style={{ padding: '0.4rem 0.6rem', fontSize: '0.9rem' }}
+                />
+                <button className="btn btn-primary" style={{ padding: '0.4rem' }} onClick={handleRename}><CheckIcon style={{ width: '1rem', height: '1rem' }} /></button>
+                <button className="btn" style={{ padding: '0.4rem' }} onClick={() => setIsRenaming(false)}><XMarkIcon style={{ width: '1rem', height: '1rem' }} /></button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
+                  <select 
+                    className={styles.sessionInput} 
+                    value={currentPlanIndex} 
+                    onChange={(e) => setCurrentPlanIndex(parseInt(e.target.value))}
+                    style={{ 
+                      fontSize: '1rem', 
+                      width: '100%', 
+                      paddingRight: '1.5rem',
+                      color: 'var(--primary)',
+                      borderBottom: '2px solid rgba(37, 99, 235, 0.2)'
+                    }}
+                  >
+                    {plans.map((plan, idx) => (
+                      <option key={plan._id} value={idx}>{plan.title}</option>
+                    ))}
+                  </select>
+                </div>
+                <button 
+                  className={styles.btnIcon} 
+                  onClick={() => { setIsRenaming(true); setNewTitle(currentPlan?.title || ''); }}
+                  style={{ background: 'rgba(37, 99, 235, 0.1)', color: 'var(--primary)', borderRadius: '8px', padding: '0.4rem' }}
+                  title={t.rename}
+                >
+                  <PencilSquareIcon style={{ width: '1rem', height: '1rem' }} />
+                </button>
+              </div>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: '0.4rem' }}>
+            <button 
+              className="btn" 
+              onClick={confirmDeleteAllOtherPlans}
+              disabled={plans.length <= 1}
+              style={{ 
+                background: 'rgba(139, 92, 246, 0.1)', 
+                color: '#8b5cf6', 
+                padding: '0.5rem',
+                opacity: plans.length <= 1 ? 0.3 : 1
+              }}
+              title={t.cleanup}
+            >
+              <SparklesIcon style={{ width: '1.25rem', height: '1.25rem' }} />
+            </button>
+            <button 
+              className="btn btn-primary" 
+              onClick={() => handleCreatePlan(`${t.noPlans} ${plans.length + 1}`)} 
+              title={t.create}
+              style={{ padding: '0.5rem' }}
+            >
+              <FolderPlusIcon style={{ width: '1.25rem', height: '1.25rem' }} />
+            </button>
+            <button 
+              className="btn" 
+              onClick={() => confirmDeletePlan(currentPlan?._id)} 
+              disabled={plans.length <= 1}
+              style={{ 
+                color: plans.length <= 1 ? '#cbd5e1' : '#ef4444', 
+                padding: '0.5rem',
+                opacity: plans.length <= 1 ? 0.5 : 1
+              }} 
+              title={t.deletePlan}
+            >
+              <TrashIcon style={{ width: '1.25rem', height: '1.25rem' }} />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.weekGrid}>
+        {DAYS.map((day, idx) => {
+          const workout = currentPlan?.days?.find((w: any) => w.dayOfWeek === day);
+
+          return (
+            <div key={day} className={`${styles.dayCard} animate-slide-up`}>
+              <div className={styles.dayHeader}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h3 className={styles.dayTitle} style={{ fontSize: '1.1rem' }}>{getDayLabel(day, idx)}</h3>
+                  <CalendarIcon style={{ width: '1.1rem', height: '1.1rem', color: 'var(--text-muted)' }} />
+                </div>
+                <input
+                  type="text"
+                  className={styles.sessionInput}
+                  placeholder={t.sessionPlaceholder}
+                  defaultValue={workout?.sessionName || ''}
+                  onBlur={(e) => updateSessionName(day, e.target.value)}
+                  style={{ fontSize: '0.85rem' }}
+                />
+              </div>
+              
+              <ul className={styles.exerciseList}>
+                {workout?.exercises?.length > 0 ? (
+                  workout.exercises.map((ex: any, exIdx: number) => (
+                    <li key={exIdx} className={styles.exerciseItem} style={{ padding: '0.6rem 0.75rem' }}>
                       <div className={styles.exerciseInfo}>
-                        <h4 title={ex.name}>{ex.name}</h4>
-                        <div className={styles.exerciseStats}>
+                        <h4 title={ex.name} style={{ fontSize: '0.9rem' }}>{ex.name}</h4>
+                        <div className={styles.exerciseStats} style={{ fontSize: '0.7rem' }}>
                           <span className={styles.statTag}>{ex.sets} hiệp</span>
                           <span className={styles.statTag}>{ex.reps} lần</span>
                         </div>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <div className={styles.weightDisplay}>
-                          <span className={styles.weightValue}>{ex.weight}</span>
+                          <span className={styles.weightValue} style={{ fontSize: '1rem' }}>{ex.weight}</span>
                           <span className={styles.weightUnit}>kg</span>
                         </div>
                         <div className={styles.actions}>
-                          <button 
-                            className={styles.actionBtnEdit} 
-                            onClick={() => setEditingExercise({ day, index: idx, data: { ...ex } })} 
-                            title="Sửa bài tập"
-                          >
-                            <PencilIcon style={{ width: '1rem', height: '1rem' }} />
+                          <button className={styles.actionBtnEdit} style={{ width: '24px', height: '24px' }} onClick={() => setEditingExercise({ day, index: exIdx, data: { ...ex } })}>
+                            <PencilIcon style={{ width: '0.85rem', height: '0.85rem' }} />
                           </button>
-                          <button 
-                            className={styles.actionBtnDelete} 
-                            onClick={() => deleteExercise(day, idx)} 
-                            title="Xóa bài tập"
-                          >
-                            <TrashIcon style={{ width: '1rem', height: '1rem' }} />
+                          <button className={styles.actionBtnDelete} style={{ width: '24px', height: '24px' }} onClick={() => confirmDeleteExercise(day, exIdx)}>
+                            <TrashIconSolid style={{ width: '0.8rem', height: '0.8rem' }} />
                           </button>
                         </div>
                       </div>
                     </li>
-                  );
-                })
-              ) : (
-                <div style={{ textAlign: 'center', padding: '1.5rem 0', opacity: 0.35 }}>
-                  <BoltIcon style={{ width: '2rem', height: '2rem', margin: '0 auto 0.5rem auto' }} />
-                  <p style={{ fontSize: '0.85rem' }}>Chưa có lịch tập</p>
-                </div>
-              )}
-            </ul>
+                  ))
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '1rem 0', opacity: 0.3 }}>
+                    <BoltIcon style={{ width: '1.5rem', height: '1.5rem', margin: '0 auto' }} />
+                    <p style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>{t.empty}</p>
+                  </div>
+                )}
+              </ul>
 
-            {isAdding ? (
-              <div className="glass" style={{ padding: '1rem', borderRadius: '20px', marginBottom: '0.75rem', border: '1px solid var(--primary-glow)' }}>
-                <h4 style={{ fontSize: '0.9rem', marginBottom: '0.75rem', fontWeight: 800, color: 'var(--primary)' }}>Thêm bài tập mới</h4>
-                <input
-                  type="text"
-                  placeholder="Tên bài tập..."
-                  className="input-field"
-                  style={{ marginBottom: '0.75rem', padding: '0.75rem' }}
-                  value={newExercise.name}
-                  onChange={e => setNewExercise({ ...newExercise, name: e.target.value })}
-                />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem' }}>
-                  <input type="number" placeholder="Kg" className="input-field" style={{ padding: '0.6rem' }} value={newExercise.weight} onChange={e => setNewExercise({ ...newExercise, weight: e.target.value })} />
-                  <input type="number" placeholder="Hiệp" className="input-field" style={{ padding: '0.6rem' }} value={newExercise.sets} onChange={e => setNewExercise({ ...newExercise, sets: e.target.value })} />
-                  <input type="number" placeholder="Lần" className="input-field" style={{ padding: '0.6rem' }} value={newExercise.reps} onChange={e => setNewExercise({ ...newExercise, reps: e.target.value })} />
-                </div>
-                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.25rem' }}>
-                  <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => handleAddExercise(day)}>
-                    Xác nhận
-                  </button>
-                  <button className="btn" onClick={() => setActiveDay(null)}>
-                    Đóng
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <button className={styles.addBtn} onClick={() => setActiveDay(day)}>
-                <PlusIcon style={{ width: '1.25rem', height: '1.25rem' }} />
-                Thêm bài tập
+              <button className={styles.addBtn} style={{ padding: '0.6rem', fontSize: '0.85rem' }} onClick={() => setActiveDay(day)}>
+                <PlusIcon style={{ width: '1rem', height: '1rem' }} />
+                {t.addEx}
               </button>
-            )}
-          </div>
-        );
-      })}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
