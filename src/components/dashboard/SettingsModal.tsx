@@ -126,7 +126,7 @@ export default function SettingsModal({
             <div style={{ display: 'flex', gap: '0.75rem', background: '#f8fafc', padding: '1rem', borderRadius: '16px' }}>
               <DevicePhoneMobileIcon style={{ width: '1.25rem', height: '1.25rem', color: '#10b981', flexShrink: 0 }} />
               <p style={{ fontSize: '0.9rem', color: '#475569', lineHeight: 1.5 }}>
-                <strong>{isVi ? 'Cài đặt App:' : 'Install App:'}</strong> {isVi ? 'Nhấn nút "Cài đặt về máy" để sử dụng TanGYM như một ứng dụng thật thụ, không cần trình duyệt.' : 'Click "Install App" to use TanGYM as a native mobile application.'}
+                <strong>{isVi ? 'Cài đặt App:' : 'Install App:'}</strong> {isVi ? 'Mở ứng dụng bằng trình duyệt thật và nhấn nút "Cài đặt về máy" để sử dụng TanGYM như một ứng dụng thật thụ, không cần trình duyệt.' : 'Click "Install App" to use TanGYM as a native mobile application.'}
               </p>
             </div>
 
@@ -140,7 +140,7 @@ export default function SettingsModal({
         </div>
 
         <p style={{ textAlign: 'center', fontSize: '0.8rem', color: '#94a3b8', marginTop: '1rem' }}>
-          TanGYM v2.0 - Made with ❤️ by HoangTan
+          TanGYM - Made with ❤️ by HoangTan
         </p>
       </div>
     </Modal>
