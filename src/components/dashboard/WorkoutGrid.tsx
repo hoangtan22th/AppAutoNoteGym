@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Dumbbell, Calendar, Trash2, Edit2, Save, X, Weight } from 'lucide-react';
+import { PlusIcon, CalendarIcon, DumbbellIcon } from 'lucide-react'; // Keeping some lucide ones for variety or switching all?
+import { PencilIcon, TrashIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import styles from '@/app/dashboard.module.css';
 
 const DAYS_VN: { [key: string]: string } = {
@@ -55,7 +56,15 @@ export default function WorkoutGrid() {
           exercises: workout?.exercises || [] 
         })
       });
-      setWorkouts(prev => prev.map(w => w.dayOfWeek === day ? { ...w, sessionName: name } : w));
+      // Update local state
+      setWorkouts(prev => {
+        const existing = prev.find(w => w.dayOfWeek === day);
+        if (existing) {
+          return prev.map(w => w.dayOfWeek === day ? { ...w, sessionName: name } : w);
+        } else {
+          return [...prev, { dayOfWeek: day, sessionName: name, exercises: [] }];
+        }
+      });
     } catch (err) {
       console.error(err);
     }
@@ -164,12 +173,12 @@ export default function WorkoutGrid() {
             <div className={styles.dayHeader}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3 className={styles.dayTitle}>{DAYS_VN[day]}</h3>
-                <Calendar size={18} color="var(--text-muted)" />
+                <CalendarIcon className="w-5 h-5 text-slate-400" style={{ width: '1.2rem', height: '1.2rem', color: 'var(--text-muted)' }} />
               </div>
               <input
                 type="text"
                 className={styles.sessionInput}
-                placeholder="Nhập tên buổi tập (VD: Ngực, Tay...)"
+                placeholder="Nhập tên buổi tập..."
                 defaultValue={workout?.sessionName || ''}
                 onBlur={(e) => updateSessionName(day, e.target.value)}
               />
@@ -183,32 +192,21 @@ export default function WorkoutGrid() {
                   if (isEditing) {
                     return (
                       <li key={idx} className="glass" style={{ padding: '1rem', borderRadius: '16px', marginBottom: '0.75rem', border: '1px solid var(--primary)' }}>
-                        <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--primary)', marginBottom: '0.25rem', display: 'block' }}>Tên bài tập</label>
                         <input
                           type="text"
                           className="input-field"
                           style={{ marginBottom: '0.75rem', padding: '0.6rem' }}
-                          placeholder="VD: Đẩy ngực ngang"
                           value={editingExercise.data.name}
                           onChange={e => setEditingExercise({ ...editingExercise, data: { ...editingExercise.data, name: e.target.value } })}
                         />
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem' }}>
-                          <div>
-                            <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)' }}>Kg</label>
-                            <input type="number" className="input-field" style={{ padding: '0.6rem' }} value={editingExercise.data.weight} onChange={e => setEditingExercise({ ...editingExercise, data: { ...editingExercise.data, weight: e.target.value } })} />
-                          </div>
-                          <div>
-                            <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)' }}>Hiệp</label>
-                            <input type="number" className="input-field" style={{ padding: '0.6rem' }} value={editingExercise.data.sets} onChange={e => setEditingExercise({ ...editingExercise, data: { ...editingExercise.data, sets: e.target.value } })} />
-                          </div>
-                          <div>
-                            <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)' }}>Lần</label>
-                            <input type="number" className="input-field" style={{ padding: '0.6rem' }} value={editingExercise.data.reps} onChange={e => setEditingExercise({ ...editingExercise, data: { ...editingExercise.data, reps: e.target.value } })} />
-                          </div>
+                          <input type="number" className="input-field" style={{ padding: '0.6rem' }} value={editingExercise.data.weight} onChange={e => setEditingExercise({ ...editingExercise, data: { ...editingExercise.data, weight: e.target.value } })} />
+                          <input type="number" className="input-field" style={{ padding: '0.6rem' }} value={editingExercise.data.sets} onChange={e => setEditingExercise({ ...editingExercise, data: { ...editingExercise.data, sets: e.target.value } })} />
+                          <input type="number" className="input-field" style={{ padding: '0.6rem' }} value={editingExercise.data.reps} onChange={e => setEditingExercise({ ...editingExercise, data: { ...editingExercise.data, reps: e.target.value } })} />
                         </div>
                         <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
                           <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleUpdateExercise}>
-                            <Save size={16} /> Lưu
+                            Lưu
                           </button>
                           <button className="btn" onClick={() => setEditingExercise(null)}>
                             Hủy
@@ -233,11 +231,11 @@ export default function WorkoutGrid() {
                           <span className={styles.weightUnit}>kg</span>
                         </div>
                         <div className={styles.actions}>
-                          <button className={styles.btnIcon} onClick={() => setEditingExercise({ day, index: idx, data: { ...ex } })} title="Sửa bài tập">
-                            <Edit2 size={16} />
+                          <button className={styles.btnIcon} onClick={() => setEditingExercise({ day, index: idx, data: { ...ex } })}>
+                            <PencilIcon style={{ width: '1rem', height: '1rem' }} />
                           </button>
-                          <button className={styles.btnIcon} onClick={() => deleteExercise(day, idx)} style={{ color: 'var(--error)' }} title="Xóa bài tập">
-                            <Trash2 size={16} />
+                          <button className={styles.btnIcon} onClick={() => deleteExercise(day, idx)} style={{ color: 'var(--error)' }}>
+                            <TrashIcon style={{ width: '1rem', height: '1rem' }} />
                           </button>
                         </div>
                       </div>
@@ -246,49 +244,38 @@ export default function WorkoutGrid() {
                 })
               ) : (
                 <div style={{ textAlign: 'center', padding: '1.5rem 0', opacity: 0.35 }}>
-                  <Dumbbell size={32} style={{ marginBottom: '0.5rem' }} />
-                  <p style={{ fontSize: '0.85rem' }}>Chưa có lịch tập</p>
+                  <p style={{ fontSize: '0.85rem' }}>Chưa có bài tập</p>
                 </div>
               )}
             </ul>
 
             {isAdding ? (
               <div className="glass" style={{ padding: '1rem', borderRadius: '20px', marginBottom: '0.75rem', border: '1px solid var(--primary-glow)' }}>
-                <h4 style={{ fontSize: '0.9rem', marginBottom: '0.75rem', fontWeight: 800, color: 'var(--primary)' }}>Thêm bài tập mới</h4>
                 <input
                   type="text"
-                  placeholder="Tên bài tập (VD: Squat, Bench Press...)"
+                  placeholder="Tên bài tập..."
                   className="input-field"
                   style={{ marginBottom: '0.75rem', padding: '0.75rem' }}
                   value={newExercise.name}
                   onChange={e => setNewExercise({ ...newExercise, name: e.target.value })}
                 />
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem' }}>
-                  <div>
-                    <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.2rem', display: 'block' }}>Khối lượng</label>
-                    <input type="number" placeholder="Kg" className="input-field" style={{ padding: '0.6rem' }} value={newExercise.weight} onChange={e => setNewExercise({ ...newExercise, weight: e.target.value })} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.2rem', display: 'block' }}>Số hiệp</label>
-                    <input type="number" placeholder="Sets" className="input-field" style={{ padding: '0.6rem' }} value={newExercise.sets} onChange={e => setNewExercise({ ...newExercise, sets: e.target.value })} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.2rem', display: 'block' }}>Số lần</label>
-                    <input type="number" placeholder="Reps" className="input-field" style={{ padding: '0.6rem' }} value={newExercise.reps} onChange={e => setNewExercise({ ...newExercise, reps: e.target.value })} />
-                  </div>
+                  <input type="number" placeholder="Kg" className="input-field" style={{ padding: '0.6rem' }} value={newExercise.weight} onChange={e => setNewExercise({ ...newExercise, weight: e.target.value })} />
+                  <input type="number" placeholder="Hiệp" className="input-field" style={{ padding: '0.6rem' }} value={newExercise.sets} onChange={e => setNewExercise({ ...newExercise, sets: e.target.value })} />
+                  <input type="number" placeholder="Lần" className="input-field" style={{ padding: '0.6rem' }} value={newExercise.reps} onChange={e => setNewExercise({ ...newExercise, reps: e.target.value })} />
                 </div>
-                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.25rem' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
                   <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => handleAddExercise(day)}>
-                    Xác nhận
+                    Thêm
                   </button>
                   <button className="btn" onClick={() => setActiveDay(null)}>
-                    Đóng
+                    Hủy
                   </button>
                 </div>
               </div>
             ) : (
               <button className={styles.addBtn} onClick={() => setActiveDay(day)}>
-                <Plus size={20} />
+                <PlusIcon style={{ width: '1.25rem', height: '1.25rem' }} />
                 Thêm bài tập
               </button>
             )}

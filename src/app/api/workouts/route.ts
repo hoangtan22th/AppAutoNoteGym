@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../auth/[...nextauth]/route';
 import dbConnect from '@/lib/mongodb';
-import Workout from '@/models/Workout';
+import WorkoutPlan from '@/models/WorkoutPlan';
 
 export async function GET(req: Request) {
   const session = await getServerSession(authOptions);
@@ -12,11 +12,10 @@ export async function GET(req: Request) {
 
   await dbConnect();
 
-  // For simplicity, we'll just get all workouts for this user
-  // In a real app, you'd filter by current week
-  const workouts = await Workout.find({ userId: (session.user as any).id });
-
-  return NextResponse.json(workouts);
+  const workoutPlan = await WorkoutPlan.findOne({ userId: (session.user as any).id });
+  
+  // Return empty array if no plan exists yet, frontend will handle it
+  return NextResponse.json(workoutPlan?.days || []);
 }
 
 export async function POST(req: Request) {
@@ -25,15 +24,32 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
-  const { dayOfWeek, exercises, date, sessionName } = await req.json();
+  const { dayOfWeek, exercises, sessionName } = await req.json();
+  const userId = (session.user as any).id;
 
   await dbConnect();
 
-  const workout = await Workout.findOneAndUpdate(
-    { userId: (session.user as any).id, dayOfWeek },
-    { exercises, date: date || new Date(), sessionName },
-    { upsert: true, new: true }
-  );
+  // Find the plan or create a new one
+  let plan = await WorkoutPlan.findOne({ userId });
 
-  return NextResponse.json(workout);
+  if (!plan) {
+    plan = new WorkoutPlan({
+      userId,
+      days: [
+        { dayOfWeek, exercises, sessionName }
+      ]
+    });
+  } else {
+    // Check if day already exists in the array
+    const dayIndex = plan.days.findIndex((d: any) => d.dayOfWeek === dayOfWeek);
+    if (dayIndex > -1) {
+      plan.days[dayIndex] = { dayOfWeek, exercises, sessionName };
+    } else {
+      plan.days.push({ dayOfWeek, exercises, sessionName });
+    }
+  }
+
+  await plan.save();
+
+  return NextResponse.json(plan.days);
 }
