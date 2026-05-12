@@ -15,6 +15,14 @@ const UserSchema = new Schema({
     required: [true, 'Please provide a password'],
     select: false, // Don't return password by default
   },
+  resetCode: {
+    type: String,
+    select: false,
+  },
+  resetCodeExpiry: {
+    type: Date,
+    select: false,
+  },
 }, { timestamps: true });
 
 const User = models.User || model('User', UserSchema);

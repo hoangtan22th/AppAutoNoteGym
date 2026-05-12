@@ -42,7 +42,7 @@ export default function RegisterPage() {
   return (
     <div className={styles.loginContainer}>
       <div className={styles.loginCard}>
-        <h1 className={styles.title}>Tạo tài khoản</h1>
+        <h1 className={styles.title}>Đăng ký TanGYM</h1>
         <p className={styles.subtitle}>Bắt đầu hành trình thay đổi bản thân</p>
 
         {error && <div className={styles.error}>{error}</div>}

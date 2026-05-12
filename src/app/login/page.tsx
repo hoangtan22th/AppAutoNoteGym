@@ -41,7 +41,7 @@ export default function LoginPage() {
   return (
     <div className={styles.loginContainer}>
       <div className={styles.loginCard}>
-        <h1 className={styles.title}>Chào mừng trở lại</h1>
+        <h1 className={styles.title}>Chào mừng trở lại TanGYM</h1>
         <p className={styles.subtitle}>Đăng nhập để theo dõi quá trình tập luyện</p>
 
         {error && <div className={styles.error}>{error}</div>}
@@ -71,6 +71,12 @@ export default function LoginPage() {
               required
               placeholder="••••••••"
             />
+          </div>
+
+          <div style={{ textAlign: 'right', marginBottom: '1.5rem', marginTop: '-1rem' }}>
+            <Link href="/forgot-password" style={{ fontSize: '0.85rem', color: 'var(--primary)', fontWeight: 600 }}>
+              Quên mật khẩu?
+            </Link>
           </div>
 
           <button

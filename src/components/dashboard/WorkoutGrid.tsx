@@ -183,7 +183,7 @@ export default function WorkoutGrid() {
                   if (isEditing) {
                     return (
                       <li key={idx} className="glass" style={{ padding: '1rem', borderRadius: '16px', marginBottom: '0.75rem', border: '1px solid var(--primary)' }}>
-                        <label style={{ fontSize: '0.75rem', fontWeight: 600, color: var(--primary), marginBottom: '0.25rem', display: 'block' }}>Tên bài tập</label>
+                        <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--primary)', marginBottom: '0.25rem', display: 'block' }}>Tên bài tập</label>
                         <input
                           type="text"
                           className="input-field"
