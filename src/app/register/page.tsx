@@ -42,14 +42,14 @@ export default function RegisterPage() {
   return (
     <div className={styles.loginContainer}>
       <div className={styles.loginCard}>
-        <h1 className={styles.title}>Đăng ký TanGYM</h1>
-        <p className={styles.subtitle}>Bắt đầu hành trình thay đổi bản thân</p>
+        <h1 className={styles.title}>TanGYM</h1>
+        <p className={styles.subtitle}>Đăng ký TanGYM<br/>Bắt đầu hành trình của bạn ngay hôm nay.</p>
 
         {error && <div className={styles.error}>{error}</div>}
 
-        <form onSubmit={handleSubmit}>
-          <div className="input-group" style={{ marginBottom: '1.25rem' }}>
-            <label htmlFor="name" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Họ và tên</label>
+        <form onSubmit={handleSubmit} className={styles.form}>
+          <div className={styles.inputGroup}>
+            <label htmlFor="name" className={styles.inputLabel}>Họ và tên</label>
             <input
               type="text"
               id="name"
@@ -61,8 +61,8 @@ export default function RegisterPage() {
             />
           </div>
 
-          <div className="input-group" style={{ marginBottom: '1.25rem' }}>
-            <label htmlFor="email" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Email</label>
+          <div className={styles.inputGroup}>
+            <label htmlFor="email" className={styles.inputLabel}>Email</label>
             <input
               type="email"
               id="email"
@@ -70,12 +70,12 @@ export default function RegisterPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              placeholder="ten@example.com"
+              placeholder="example@gmail.com"
             />
           </div>
 
-          <div className="input-group" style={{ marginBottom: '2rem' }}>
-            <label htmlFor="password" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Mật khẩu</label>
+          <div className={styles.inputGroup}>
+            <label htmlFor="password" className={styles.inputLabel}>Mật khẩu</label>
             <input
               type="password"
               id="password"
@@ -91,7 +91,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             className="btn btn-primary"
-            style={{ width: '100%' }}
+            style={{ width: '100%', marginTop: '0.5rem', padding: '1rem' }}
             disabled={loading}
           >
             {loading ? 'Đang khởi tạo...' : 'Đăng Ký'}

@@ -8,6 +8,13 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "TanGYM - Ghi chép lịch tập gym chuyên nghiệp",
   description: "Ứng dụng theo dõi lịch tập gym tối ưu cho mobile.",
+  manifest: "/manifest.json",
+  themeColor: "#2563eb",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "TanGYM",
+  },
 };
 
 export default function RootLayout({

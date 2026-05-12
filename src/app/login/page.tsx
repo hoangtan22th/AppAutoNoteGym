@@ -41,14 +41,14 @@ export default function LoginPage() {
   return (
     <div className={styles.loginContainer}>
       <div className={styles.loginCard}>
-        <h1 className={styles.title}>Chào mừng trở lại TanGYM</h1>
-        <p className={styles.subtitle}>Đăng nhập để theo dõi quá trình tập luyện</p>
+        <h1 className={styles.title}>TanGYM</h1>
+        <p className={styles.subtitle}>Chào mừng trở lại TanGYM!<br/>Đăng nhập để tiếp tục tập luyện.</p>
 
         {error && <div className={styles.error}>{error}</div>}
 
-        <form onSubmit={handleSubmit}>
-          <div className="input-group" style={{ marginBottom: '1.5rem' }}>
-            <label htmlFor="email" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Email</label>
+        <form onSubmit={handleSubmit} className={styles.form}>
+          <div className={styles.inputGroup}>
+            <label htmlFor="email" className={styles.inputLabel}>Email</label>
             <input
               type="email"
               id="email"
@@ -56,12 +56,12 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              placeholder="ten@example.com"
+              placeholder="example@gmail.com"
             />
           </div>
 
-          <div className="input-group" style={{ marginBottom: '2rem' }}>
-            <label htmlFor="password" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Mật khẩu</label>
+          <div className={styles.inputGroup}>
+            <label htmlFor="password" className={styles.inputLabel}>Mật khẩu</label>
             <input
               type="password"
               id="password"
@@ -73,19 +73,17 @@ export default function LoginPage() {
             />
           </div>
 
-          <div style={{ textAlign: 'right', marginBottom: '1.5rem', marginTop: '-1rem' }}>
-            <Link href="/forgot-password" style={{ fontSize: '0.85rem', color: 'var(--primary)', fontWeight: 600 }}>
-              Quên mật khẩu?
-            </Link>
-          </div>
+          <Link href="/forgot-password" className={styles.forgotLink}>
+            Quên mật khẩu?
+          </Link>
 
           <button
             type="submit"
             className="btn btn-primary"
-            style={{ width: '100%' }}
+            style={{ width: '100%', marginTop: '0.5rem', padding: '1rem' }}
             disabled={loading}
           >
-            {loading ? 'Đang đăng nhập...' : 'Đăng Nhập'}
+            {loading ? 'Đang xử lý...' : 'Đăng Nhập'}
           </button>
         </form>
 
